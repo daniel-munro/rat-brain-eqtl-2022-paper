@@ -36,9 +36,6 @@ ld_mean |>
     expand_limits(x = c(0, 1), y = c(0, 1)) +
     theme_bw() +
     theme(
-        # legend.title = element_blank(),
-        # legend.position = c(0.7, 0.8),
-        # legend.background = element_rect(fill = "white", color = "#dddddd", size = 0.1),
         panel.grid = element_blank(),
     ) +
     xlab("Distance (Mb)") +

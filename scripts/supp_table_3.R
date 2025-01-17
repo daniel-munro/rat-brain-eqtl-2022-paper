@@ -16,14 +16,12 @@ spec_eqtl <- top_assoc |>
            n_tested = n()) |>
     ungroup() |>
     filter(n_sig == 1,
-           # n_tested == 5
            # Assume untested gene/tissue combos would be even less significant:
            n_tested >= 2) |>
     group_by(gene_id, gene_name) |>
     arrange(pval_beta) |>
     summarise(variant_id = variant_id[1],
               eQTL_tissue = tissue[1],
-              # pval_ratio = pval_beta[2] / pval_beta[1],
               eQTL_log10_pval = -log10(pval_beta[1]),
               next_log10_pval = -log10(pval_beta[2]),
               log10_pval_diff = eQTL_log10_pval - next_log10_pval,

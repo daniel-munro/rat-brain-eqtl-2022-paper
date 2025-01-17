@@ -1,11 +1,6 @@
 library(tidyverse)
 
 date_clean <- function(dates) {
-    # if (str_match(date, "\\d{1,2}/\\d{1,2}/\\d{4}")) {
-    #     x <- str_match(date, "^(\\d{1,2})/(\\d{1,2})/(\\d{4})$")
-    #     date <- str_glue("{x[4]}-{x[2]}-{x[3]}")
-    # }
-    # date
     map_chr(dates, ~as.character(as.Date(.x, tryFormats = c("%Y-%m-%d", "%m/%d/%Y"))))
 }
 
@@ -134,7 +129,6 @@ d <- d %>%
     mutate(geno_match_comment = case_when(
         library == "000789FFF0_LHB" ~ "Original label before genotype mismatch fix: 000789FFF9_LHB",
         library == "000789FFF9_LHB" ~ "Original label before genotype mismatch fix: 000789FFF0_LHB",
-        # library %in% geno_dups ~ ,
         library %in% geno_nomatch ~ "No matching genotype found",
         TRUE ~ as.character(NA)
     )) %>%

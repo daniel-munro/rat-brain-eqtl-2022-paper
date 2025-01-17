@@ -5,7 +5,6 @@ library(tidyverse)
 ## SNP counts ##
 ################
 
-# ac <- readInfo("data/genotype/P50.rnaseq.88.unpruned.vcf.gz", "AC")
 d <- info(readVcf("data/genotype/P50.rnaseq.88.unpruned.vcf.gz")) |>
     as_tibble() |>
     mutate(AC = as.integer(AC),

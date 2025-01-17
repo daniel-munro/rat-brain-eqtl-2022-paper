@@ -29,9 +29,6 @@ chrom_label_locs <- function(bins) {
     levels(bins)[round((first + last) / 2)]
 }
 
-# genes <- read_tsv("data/expression/ensembl-gene_inv-quant_Acbc.bed.gz",
-#                   col_types = cols(`#chr` = "i", start = "i", gene_id = "c",
-#                                    .default = "-")) |>
 genes <- read_tsv("data/genes.txt", col_types = "c-c---i-----") |>
     rename(gene_chrom = chrom,
            gene_pos = tss)
@@ -64,7 +61,6 @@ binned |>
     scale_y_discrete(drop = FALSE,
                      breaks = chrom_label_locs(binned$gene_bin),
                      labels = c("chr1", 2:20)) +
-    # scale_fill_gradient(low = "#cccccc", high = "red") +
     scale_fill_gradientn(colors = c("#cccccc", "#5555ff", "red"),
                          breaks = 5:10,
                          labels = c(5:9, "10+")) +
@@ -73,13 +69,11 @@ binned |>
     theme(
         panel.grid = element_blank(),
         legend.position = "top",
-        # axis.text.x = element_text(hjust = 1, vjust = 0.5, angle = 90),
     ) +
     xlab("Gene location") +
     ylab("Variant location") +
     labs(fill = expression(-log[10](P)))
 
-# ggsave("analysis/trans/trans-eqtls.png", width = 4.3, height = 5, bg = "white")
 ggsave("figures/figure3/figure3a.png", width = 5.2, height = 6, bg = "white")
 
 #####################################
@@ -97,15 +91,11 @@ p1 <- eqtls |>
     distinct(chrom, pos) |>
     mutate(bin = genome_bin(chrom, pos) |> as.integer()) |>
     ggplot(aes(x = bin)) +
-    # facet_grid(cols = vars(chrom)) +
     geom_density(fill = "black")
-    # geom_bar()
 
 p2 <- all_snps |>
     mutate(bin = genome_bin(chrom, pos) |> as.integer()) |>
     ggplot(aes(x = bin)) +
-    # facet_grid(cols = vars(chrom)) +
     geom_density(fill = "black")
-    # geom_bar()
 
 p1 / p2

@@ -7,7 +7,6 @@ egenes <- filter(top_assoc, qval < 0.05)
 eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "ccciiciiccdddddid")
 
 # Number of significant eGenes per tissue:
-# count(egenes, tissue, sort = TRUE)
 top_assoc |>
     group_by(tissue) |>
     summarise(n = sum(qval < 0.05),
@@ -23,15 +22,6 @@ egenes |>
     summarise(n_tissues = n(), .groups = "drop") |>
     count(n_tissues) |>
     mutate(frac = n / sum(n))
-
-# # Number of independent eQTLs per tissue:
-# count(eqtls, tissue, sort = TRUE)
-# 
-# # Number of independent eQTLs per eGene:
-# eqtls |>
-#     count(tissue, gene_id, name = "eQTLs") |>
-#     count(tissue, eQTLs) |>
-#     arrange(eQTLs, n)
 
 # Average number of eGenes with 2 and 3 independent eQTLs
 eqtls |>

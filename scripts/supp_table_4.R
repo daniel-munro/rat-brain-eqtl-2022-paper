@@ -92,7 +92,6 @@ expr |>
     ) |>
     replace_na(list(is_eGene = FALSE)) |>
     ggplot(aes(x = median_count, fill = is_eGene)) +
-    # geom_histogram(bins = 100) +
     geom_density(alpha = 0.5) +
     scale_x_log10()
 

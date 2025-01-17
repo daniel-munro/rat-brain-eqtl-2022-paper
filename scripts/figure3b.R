@@ -80,19 +80,14 @@ p1 <- pairs |>
     theme_bw() +
     theme(
         panel.grid = element_blank(),
-        # strip.background = element_rect(fill = "white"),
         strip.background = element_blank(),
         strip.text = element_text(color = "black"),
-        # panel.spacing.x = unit(10, "pt"), # to prevent tick label overlap
-        # panel.spacing.y = unit(90, "pt"), # to make space for effect plots
         legend.position = "top",
         legend.margin = margin(0, 0, -5, 0),
     ) +
     xlab("Position (Mb)") +
     ylab(expression(-log[10](P))) +
     labs(color = expression("LD "*(r^2)))
-
-# ggsave("analysis/locuszoom/top_eqtls_locus.png", width = 5, height = 4.5)
 
 ##################
 ## Effect plots ##
@@ -125,7 +120,6 @@ plot_eqtl <- function(df) {
         geom_boxplot(fill = "white", width = 0.1, outlier.size = 0.5) +
         scale_fill_manual(values = c("#ebfbe5", "#95e879", "#4ac021")) +
         xlab(NULL) +
-        # ylab("Normalized expression") +
         ylab(NULL) +
         theme_bw() +
         theme(
@@ -134,7 +128,6 @@ plot_eqtl <- function(df) {
             strip.text = element_text(color = "black"),
             plot.title = element_text(hjust = 0.5, size = 10),
         )
-        # ggtitle(unique(df$variant_id))
 }
 
 expr <- read_tsv("data/expression/ensembl-gene_inv-quant_NAcc.bed.gz",
@@ -157,21 +150,7 @@ p <- lapply(top$gene_id, function (x) {
         filter(gene_id == x) |>
         plot_eqtl()
 })
-# (p[[1]] + p[[2]] + p[[3]]) / plot_spacer() / (p[[4]] + p[[5]] + p[[6]]) +
-#     plot_layout(heights = c(2, 3, 2)) &
-#     theme(
-#         plot.background = element_blank(),
-#         plot.margin = margin(r = -4),
-#     )
 
 p1 + (p[[1]] / p[[2]] / p[[3]] / p[[4]] / p[[5]] / p[[6]]) +
     plot_layout(widths = c(2, 1))
 ggsave("figures/figure3/figure3b.png", width = 4, height = 7)
-
-# p1
-# ggsave("analysis/locuszoom/top_eqtls_locus.png", width = 2.5, height = 7)
-# (p[[1]] / p[[2]] / p[[3]] / p[[4]] / p[[5]] / p[[6]]) &
-#     theme(
-#         plot.margin = margin(t = -4, b = 1, r = 1, l = 1),
-#     )
-# ggsave("analysis/locuszoom/top_eqtls_effect.png", width = 1.5, height = 7)

@@ -52,28 +52,6 @@ top |>
 
 ggsave("figures/figureS3/figureS3b.png", width = 3.5, height = 3.5, device = png)
 
-# ########################################
-# ## Scatter plot of LMM vs LM p-values ##
-# ########################################
-# 
-# p1b_r <- with(top, cor(-log10(p_lm), -log10(p_lmm), method = "spearman")) |> signif(4)
-# p1b <- top |>
-#     slice_sample(prop = 1L, replace = FALSE) |>
-#     ggplot(aes(x = -log10(p_lm), y = -log10(p_lmm), color = pve)) +
-#     geom_abline(slope = 1, intercept = 0, color = "#cccccc") +
-#     annotate("text", x = 33, y = 32, hjust = 0, label = "x = y") +
-#     geom_point(size = 0.25, show.legend = FALSE) +
-#     coord_fixed() +
-#     scale_color_viridis_c(begin = 0, end = 0.8) +
-#     annotate("text", x = 2, y = 35, hjust = 0,
-#              label = str_glue("rho = {p1b_r}\nN = {nrow(top)}")) +
-#     theme_bw() +
-#     theme(panel.grid = element_blank()) +
-#     # labs(color = expression(PVE[GRM])) +
-#     xlab(expression(-log[10](P)*", fixed effects model")) +
-#     ylab(expression(-log[10](P)*", linear mixed model"))
-# p1b
-
 ###########################################
 ## eGene overlap at different thresholds ##
 ###########################################
@@ -101,9 +79,6 @@ overlap |>
     labs(fill = "Below\nthreshold in")
 
 ggsave("figures/figureS3/figureS3c.png", width = 6, height = 2)
-
-# (p1a + p1b) / p2 + plot_layout(heights = c(2, 1))
-# ggsave("analysis/GEMMA/gemma_fig.png", width = 5, height = 5.5)
 
 #############################
 ## Stats related to figure ##

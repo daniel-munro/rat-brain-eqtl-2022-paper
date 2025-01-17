@@ -62,67 +62,6 @@ d_stats <- d |>
               n = n(),
               .groups = "drop")
 
-# ###########################
-# ## eGene count bar plots ##
-# ###########################
-# 
-# d |>
-#     filter(pLI <= 0.1 | pLI >= 0.9) |>
-#     mutate(pli_group = if_else(pLI > 0.5, "High pLI", "Low pLI")) |>
-#     group_by(pli_group) |>
-#     mutate(pli_group = str_glue("{pli_group}\n(N = {n()})")) |>
-#     ungroup() |>
-#     mutate(
-#         pli_group = fct_rev(pli_group),
-#         eqtl_group = case_when(
-#             eqtl_gtex ~ "GTEx eQTL",
-#             !eqtl_gtex & eqtl_rat ~ "HS rat eQTL only",
-#             !eqtl_gtex & !eqtl_rat ~ "No eQTLs",
-#         )) |>
-#     ggplot(aes(x = pli_group, fill = eqtl_group)) +
-#     geom_bar(position = "fill") +
-#     scale_y_continuous(labels = scales::percent) +
-#     scale_fill_manual(values = c("#ab8cef", "#f8766d", "#777777")) +
-#     theme_bw() +
-#     theme(
-#         panel.grid = element_blank(),
-#         legend.title = element_blank(),
-#         # legend.position = c(0.25, 0.85),
-#         legend.position = "top",
-#         legend.box.margin = margin(-5, 0, -10, 0),
-#         legend.key.size = unit(10, "pt"),
-#     ) +
-#     guides(fill = guide_legend(nrow = 3)) +
-#     xlab(NULL) +
-#     ylab("Expressed ortholog pairs")
-# 
-# ggsave("analysis/specificity/eGene_pLI_fig_1.png", width = 2, height = 3)
-# 
-# ################
-# ## Point plot ##
-# ################
-# 
-# d_stats |>
-#     mutate(group = str_glue("{eqtl}\n(N = {n})")) |>
-#     ggplot(aes(x = group, y = mean_pLI, ymin = mean_pLI - SE_pLI, ymax = mean_pLI + SE_pLI,
-#                color = eqtl)) +
-#     geom_pointrange(size = 0.75, fatten = 2, show.legend = FALSE) +
-#     scale_color_manual(values = c("#c583e2", "#619cff", "#f8766d", "#555555")) +
-#     # expand_limits(y = c(0, 1)) +
-#     theme_bw() +
-#     theme(
-#         panel.grid = element_blank(),
-#         # axis.text.x = element_text(hjust = 0.5, angle = 30),
-#         axis.text.x = element_text(hjust = 0.5),
-#     ) +
-#     # xlab("Orthologs with an eQTL in\nany brain tissue from...") +
-#     xlab("Ortholog pairs grouped by dataset(s)\nin which eQTL was found") +
-#     # xlab("Ortholog pairs grouped\nby dataset(s) in which\neQTL was found") +
-#     # xlab("Ortholog pairs grouped by eQTL status") +
-#     ylab("pLI (mean ± SE)")
-# 
-# ggsave("analysis/specificity/eGene_pLI_fig_2.png", width = 3.5, height = 4)
-
 ##############################
 ## Point plot: figure panel ##
 ##############################
@@ -141,25 +80,3 @@ d_stats |>
     ylab("pLI (mean ± SE)")
 
 ggsave("figures/figure5/figure5c.png", width = 2.5, height = 2.5)
-
-# #######################
-# ## Original pLI plot ##
-# #######################
-# 
-# d_stats |>
-#     ggplot(aes(x = eqtl, y = mean_pLI, ymin = mean_pLI - SE_pLI, ymax = mean_pLI + SE_pLI,
-#                color = eqtl)) +
-#     geom_pointrange(size = 0.75, fatten = 2, show.legend = FALSE) +
-#     scale_color_manual(values = c("#c583e2", "#619cff", "#f8766d", "#555555")) +
-#     # expand_limits(y = c(0, 1)) +
-#     theme_bw() +
-#     theme(
-#         panel.grid = element_blank(),
-#         axis.text.x = element_text(hjust = 1, angle = 30)
-#     ) +
-#     # xlab("Orthologs with an eQTL in\nany brain tissue from...") +
-#     xlab("Ortholog pairs grouped by dataset(s)\nin which eQTL was found") +
-#     # xlab("Ortholog pairs grouped by eQTL status") +
-#     ylab("pLI (mean ± SE)")
-# 
-# ggsave("analysis/specificity/eGene_pLI_fig.png", width = 3, height = 3)

@@ -33,7 +33,6 @@ smr |>
                color = "#999999", show.legend = FALSE) +
     geom_point(aes(color = NULL), data = filter(smr, !sig, gcolor == 1), size = 0.5,
                color = "#bbbbbb", show.legend = FALSE) +
-    # scale_color_manual(values = c("#aaaaaa", "black")) +
     geom_point(size = 1) +
     geom_hline(aes(yintercept = threshold, color = tissue), data = thresh, size = 0.2, alpha = 0.5) +
     expand_limits(x = c(0, sum(chr_len))) +
@@ -52,9 +51,6 @@ smr |>
         legend.key.size = unit(10, "pt"),
         panel.grid.major = element_blank(),
         panel.grid.minor.y = element_blank(),
-        # legend.spacing.x = unit(0, "pt"),
-        # legend.margin = margin(0, 0, 0, 0),
-        # legend.box.margin = margin(0, 0, 0, -5, unit = "pt"),
     ) +
     xlab("Chromosome") +
     ylab(expression(-log[10](P[SMR]))) +
@@ -88,6 +84,5 @@ sig |>
 smr |>
     group_by(tissue, trait) |>
     summarise(threshold = 0.05 / n(), .groups = "drop") |>
-    # skimr::skim(threshold)
     summarise(min = min(threshold),
               max = max(threshold))

@@ -1,5 +1,3 @@
-# Based on ../haplotype_simulation.Rmd
-
 library(tidyverse)
 
 ########################
@@ -37,34 +35,33 @@ geno_sim <- function(pairs = 50, generations = 90, mating = "circular") {
         mutate(generation = as.integer(generation))
 }
 
+genos <- tibble(permutation = 1:200) |>
+    group_by(permutation) |>
+    summarise(geno_sim(generations = 90), .groups = "drop")
 
-# genos <- tibble(permutation = 1:200) |>
-#     group_by(permutation) |>
-#     summarise(geno_sim(generations = 90), .groups = "drop")
-# 
-# counts <- genos |>
-#     group_by(permutation, generation) |>
-#     summarise(
-#         tibble(strain = c(unlist(female), unlist(male))) |>
-#             count(strain),
-#         .groups = "drop"
-#     )
-# 
-# write_tsv(counts, "haplotypes/paper/breeding_sim_circ.tsv")
+counts <- genos |>
+    group_by(permutation, generation) |>
+    summarise(
+        tibble(strain = c(unlist(female), unlist(male))) |>
+            count(strain),
+        .groups = "drop"
+    )
 
-# genos2 <- tibble(permutation = 1:200) |>
-#     group_by(permutation) |>
-#     summarise(geno_sim(generations = 90, mating = "random"), .groups = "drop")
-# 
-# counts2 <- genos2 |>
-#     group_by(permutation, generation) |>
-#     summarise(
-#         tibble(strain = c(unlist(female), unlist(male))) |>
-#             count(strain),
-#         .groups = "drop"
-#     )
-# 
-# write_tsv(counts2, "haplotypes/paper/breeding_sim_rand.tsv")
+write_tsv(counts, "data/haplotypes/breeding_sim_circ.tsv")
+
+genos2 <- tibble(permutation = 1:200) |>
+    group_by(permutation) |>
+    summarise(geno_sim(generations = 90, mating = "random"), .groups = "drop")
+
+counts2 <- genos2 |>
+    group_by(permutation, generation) |>
+    summarise(
+        tibble(strain = c(unlist(female), unlist(male))) |>
+            count(strain),
+        .groups = "drop"
+    )
+
+write_tsv(counts2, "data/haplotypes/breeding_sim_rand.tsv")
 
 #######################################
 ## Load real haplotype probabilities ##
@@ -146,7 +143,6 @@ entropies |>
     theme(
         legend.position = c(0.21, 0.25),
         legend.title = element_blank(),
-        # legend.background = element_rect(fill = "#FFFFFFAA", color = "#FFFFFF00"),
         panel.grid = element_blank(),
     ) +
     xlab("Generation") +

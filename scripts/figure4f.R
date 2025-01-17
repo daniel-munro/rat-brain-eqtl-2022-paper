@@ -46,19 +46,9 @@ queries <- list(
     list(query = intersects, params = t[c(1, 2, 3, 4, 5)], color = colors[5], active = TRUE)
 )
 
-# png("stats/eGene_sets.png", width = 5, height = 3, units = "in", res = 300)
-# pdf("stats/eGene_sets.pdf", width = 5, height = 3, onefile = FALSE)
-## To fix obscured intersection bars, save as SVG, raise upper plot in Affinity, and export.
-# svglite::svglite("splice/sGene_sets.svg", width = 5, height = 2.5)
 png("figures/figure4/figure4f.png", width = 8, height = 5.5, units = "in", res = 300)
 upset(
     fromList(x),
-    # main.bar.color = c(rep(colors[1], 5),
-    #                    rep(colors[2], 10),
-    #                    rep(colors[3], 10),
-    #                    rep(colors[4], 5),
-    #                    rep(colors[5], 1)),
-    # matrix.color = c("blue", "red"))
     queries = queries,
     show.numbers = FALSE,
     sets.x.label = "sGenes",

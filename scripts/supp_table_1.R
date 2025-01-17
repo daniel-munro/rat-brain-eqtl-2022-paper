@@ -38,11 +38,9 @@ expr_reads <- read.csv(
     check.names = FALSE
 )
 expr_reads <- expr_reads[, colnames(expr_reads) %in% samples$library]
-# summary(colSums(expr_reads))
 expr_reads_stats <- expr_reads |>
     as_tibble(rownames = "gene_id") |>
     pivot_longer(-gene_id, names_to = "library", values_to = "count") |>
-    # separate(library, c("rat_id", "tissue"), sep = "_") |>
     mutate(rat_id = str_sub(library, 1, 10),
            tissue = str_sub(library, 12),
            tissue = tissues[tissue]) |> # For speed

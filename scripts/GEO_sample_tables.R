@@ -8,7 +8,6 @@ d <- read_csv("data/qc/metadata/metadata_p50_hao_chen_2014.csv",
            QC_expr_outlier, QC_expr_zeros, QC_pass, file_locations) %>%
     arrange(brain_region) %>%
     # There are identical file names in different batches, so make unique:
-    # mutate(file_locations = str_replace_all(file_locations, "batch./", "")) %>%
     mutate(file_locations = str_replace_all(file_locations, "/", "_")) %>%
     group_by(brain_region) %>%
     mutate(id = str_c("Sample ", 1:n()), .before = 1) %>%

@@ -38,7 +38,6 @@ smr |>
                color = "#999999", show.legend = FALSE) +
     geom_point(aes(color = NULL), data = filter(smr, !sig, gcolor == 1), size = 0.5,
                color = "#bbbbbb", show.legend = FALSE) +
-    # scale_color_manual(values = c("#aaaaaa", "black")) +
     geom_point(size = 1) +
     geom_hline(aes(yintercept = threshold, color = tissue), data = thresh, size = 0.2, alpha = 0.5) +
     geom_text(aes(color = NULL, shape = NULL, x = NULL, y = NULL, label = name),
@@ -52,16 +51,9 @@ smr |>
     scale_shape_manual(values = c(1:5)) +
     theme_bw() +
     theme(
-        # legend.position = c(0.98, 0.95),
-        # legend.justification = c(1, 1),
-        # legend.background = element_rect(color = "black", size = 0.2),
-        # legend.spacing.y = unit(5, "pt"),
-        # legend.key.size = unit(10, "pt"),
         legend.position = "top",
         panel.grid.major = element_blank(),
         panel.grid.minor.y = element_blank(),
-        # legend.spacing.x = unit(0, "pt"),
-        # legend.margin = margin(0, 0, -5, 0),
         legend.box.margin = margin(0, 0, -10, 0, unit = "pt"),
         strip.text = element_blank(),
     ) +

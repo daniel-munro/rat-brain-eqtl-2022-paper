@@ -5,10 +5,6 @@ human_genes <- read_tsv("data/gtex/gtex_genes.txt", col_types = "cc",
     select(name, id) |>
     deframe()
 
-# set_names <- read_tsv("analysis/orthologs/gene_set_names.tsv", col_types = "cc")
-
-# orthologs <- read_tsv("data/gtex/orthologs.txt", col_types = "-c") |>
-    # mutate(gene_id_human = str_replace(gene_id_human, "\\..+$", "")) |>
 # Subset to ortholog pairs with SDg used in the figure:
 orthologs <- read_tsv("data/gtex/orthologs/ortholog_SDg.tsv", col_types = "-c--") |>
     distinct() |>

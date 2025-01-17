@@ -29,7 +29,6 @@ mean_probs <- d |>
            chrom = factor(chrom, levels = str_c("chr", 1:20)))
 
 mean_probs |>
-    # filter(chrom %in% str_c("chr", 1:6)) |>
     ggplot(aes(x = pos, y = prob, fill = Strain)) +
     facet_wrap(~ chrom, ncol = 2, dir = "v", strip.position = "left") +
     geom_area() +
@@ -41,8 +40,6 @@ mean_probs |>
     ylab("Estimated Proportion") +
     theme(
         axis.text.y = element_blank(),
-        # panel.grid.major.y = element_blank(),
-        # panel.grid.minor.y = element_blank(),
         panel.grid = element_blank(),
         axis.ticks.y = element_blank(),
         axis.line.x = element_line(size = 0.25),

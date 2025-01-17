@@ -12,7 +12,6 @@ gsets <- read_tsv("data/gtex/orthologs/gene_sets.tsv", col_types = "cc")
 
 d_sets <- d |>
     inner_join(gsets, by = "gene_id_human") |>
-    # mutate(set = fct_infreq(set)) |>
     select(-gene_id_rat,-gene_id_human) |>
     pivot_longer(
         c(SDg_rat, SDg_GTEx),
@@ -43,7 +42,6 @@ median_all <- d |>
 
 size_labels <- d_sets |>
     filter(organism == "Human") |>
-    # mutate(label = if_else(set == levels(set)[1], str_glue("(N = {n})"), str_glue("({n})")))
     mutate(label = str_glue("({n})"))
 
 d_sets |>
@@ -66,39 +64,3 @@ d_sets |>
     ylab(expression(SD^G))
 
 ggsave("figures/figure5/figure5g.png", width = 7, height = 2.9)
-
-# ## Vertical boxplots:
-# 
-# d_sets |>
-#     ggplot(aes(x = set, y = SDg, color = organism)) +
-#     geom_boxplot(outlier.size = 0.25, outlier.alpha = 0.5) +
-#     scale_color_manual(values = c("#619CFFFF", "#F8766DFF")) +
-#     theme_bw() +
-#     theme(
-#         axis.text.x = element_text(hjust = 1, vjust = 1, angle = 30),
-#         panel.grid = element_blank(),
-#         legend.title = element_blank(),
-#         legend.position = "left",
-#         legend.margin = margin(0, -5, 0, 0, unit = "pt"),
-#     ) +
-#     xlab("Human gene set") +
-#     ylab(expression(SD^G))
-# 
-# ggsave("analysis/orthologs/ortholog_gene_sets_fig.png", width = 8, height = 3.3)
-
-# ## Alternative: horizontal boxplots
-# 
-# d_sets |>
-#     ggplot(aes(x = set, y = SDg, color = organism)) +
-#     geom_boxplot(outlier.size = 0.25, outlier.alpha = 0.5) +
-#     scale_color_manual(values = c("#619CFFFF", "#F8766DFF")) +
-#     coord_flip() +
-#     theme_bw() +
-#     theme(
-#         panel.grid = element_blank(),
-#         legend.title = element_blank(),
-#     ) +
-#     xlab("Human gene set") +
-#     ylab(expression(SD^G))
-# 
-# ggsave("analysis/orthologs/ortholog_gene_sets_fig2.png", width = 7, height = 3)

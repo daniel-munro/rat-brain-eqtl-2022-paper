@@ -54,8 +54,6 @@ enrich <- vep |>
               .groups = "drop") |>
     pivot_longer(esnp_IL:ssnp_PL, names_to = "type_tissue", values_to = "n_xsnp") |>
     mutate(
-        #frac_esnp = n_esnp / sum(n_esnp),
-        #frac_total = n_total / sum(n_total),
         frac_xsnp = n_xsnp / snp_counts[type_tissue],
         frac_total = n_total / n_distinct(vep$variant_id),
         log2_enrich = log2(frac_xsnp / frac_total)
@@ -80,24 +78,6 @@ p1 <- enrich |>
     theme(panel.grid = element_blank()) +
     xlab(NULL) +
     ylab(expression(log[2]*" fold enrichment in eSNPs"))
-# ## eSNPs and sSNPs:
-# p1 <- enrich |>
-#     group_by(Consequence, type) |>
-#     summarise(mean_enr = mean(log2_enrich),
-#               sd_enr = sd(log2_enrich),
-#               .groups = "drop") |>
-#     mutate(Consequence = fct_rev(Consequence)) |>
-#     ggplot(aes(x = Consequence, y = mean_enr, ymin = mean_enr - sd_enr,
-#                ymax = mean_enr + sd_enr, color = type)) +
-#     geom_pointrange(fatten = 1) +
-#     geom_hline(yintercept = 0, lty = 2) +
-#     coord_flip() +
-#     theme_bw() +
-#     theme(panel.grid = element_blank()) +
-#     xlab(NULL) +
-#     ylab(expression(log[2]*" fold enrichment in eSNPs"))
-
-# ggsave("vep/vep_figure_enrich.png", width = 3.5, height = 2)
 
 p2 <- enrich |>
     group_by(Consequence, type) |>
@@ -108,7 +88,6 @@ p2 <- enrich |>
            type = type |> fct_recode(eSNPs = "esnp", sSNPs = "ssnp") |> fct_rev()) |>
     ggplot(aes(x = Consequence, y = mean_frac, ymin = mean_frac - sd_frac,
                ymax = mean_frac + sd_frac, fill = type)) +
-    # geom_col(fill = "#aaaaaa") +
     geom_col(position = "dodge") +
     geom_linerange(position = position_dodge(width = 1)) +
     coord_flip() +
@@ -125,9 +104,5 @@ p2 <- enrich |>
     xlab(NULL) +
     ylab("Proportion\nof e/sSNPs")
 
-# ggsave("vep/vep_figure_prop.png", width = 1.5, height = 2)
-
 p1 + p2 + plot_layout(widths = c(3, 2))
-# ggsave("vep/vep_figure.png", width = 5, height = 2.2)
-# ggsave("vep/vep_figure.png", width = 5, height = 3)
 ggsave("figures/figure4/figure4g.png", width = 6, height = 2.2)

@@ -24,7 +24,6 @@ run_anevah <- function(tissue) {
         row.names = 1,
         as.is = TRUE, #nrow = 100
     )
-    # anevah::anevah(ref_counts, alt_counts)
     anevah(ref_counts, alt_counts)
 }
 

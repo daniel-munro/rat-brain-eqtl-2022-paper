@@ -38,8 +38,6 @@ vep <- vep_all %>%
     ) %>%
     ungroup() %>%
     mutate(Consequence = Consequence %>%
-               # str_replace("non_coding_transcript_exon_variant",
-               #             "non_coding_transcript_variant") %>%
                fct_recode(!!!labels)) %>%
     distinct(variant_id, Consequence, Gene)
 

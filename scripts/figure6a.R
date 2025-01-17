@@ -12,7 +12,6 @@ eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "cc---c-----------")
 esnps <- read_tsv("data/tensorqtl/PQCT.cis_qtl_signif.txt.gz", col_types = "cc----ddd-") |>
     rename(gene_id = phenotype_id) |>
     filter(gene_id %in% eqtls$gene_id) |>
-    # slice_sample(n = 10000) |>
     mutate(variant_id = str_replace(variant_id, "chr", ""),
            logp = -log10(pval_nominal)) |>
     separate(variant_id, c("chrom", "pos"), sep = ":", convert = TRUE) |>
@@ -43,25 +42,13 @@ ggplot(gwas, aes(x = gpos, y = logp, color = gcolor)) +
     geom_point(size = 0.5, show.legend = FALSE) +
     geom_point(data = smr, color = "#984ea3", shape = 5, stroke = 1) +
     expand_limits(x = c(0, sum(chr_len))) +
-    # expand_limits(y = c(0, max(gwas$logp) * 1.05)) +
     scale_x_continuous(breaks = label_locs, labels = 1:20, expand = c(0.02, 0),
                        minor_breaks = grid_locs) +
-    # scale_y_continuous(expand = c(0.01, 0)) +
-    # scale_color_manual(values = c("#111111", "#6290BC")) +
     scale_color_manual(values = c("#111111", "#444444")) +
     theme_bw() +
     theme(
-        # legend.position = c(0.98, 0.95),
-        # legend.justification = c(1, 1),
-        # legend.background = element_rect(color = "black", size = 0.2),
-        # legend.spacing.y = unit(0, "pt"),
-        # legend.key.size = unit(15, "pt"),
         panel.grid.major = element_blank(),
         panel.grid.minor.y = element_blank(),
-        # panel.grid.minor.x = element_line(color = "#aaaaaa"),
-        # legend.spacing.x = unit(0, "pt"),
-        # legend.margin = margin(0, 0, 0, 0),
-        # legend.box.margin = margin(0, 0, 0, -5, unit = "pt"),
     ) +
     xlab("Chromosome") +
     ylab(expression(-log[10](P[GWAS]*" or "*P[SMR])))
@@ -69,7 +56,6 @@ ggplot(gwas, aes(x = gpos, y = logp, color = gcolor)) +
 ggsave("figures/figure6/figure6a1.png", width = 7, height = 2)
 
 p <- ggplot(esnps, aes(x = gpos, y = logp, color = gcolor)) +
-    # geom_point(size = 0.5, color = "#984ea3") +
     geom_point(size = 0.5, show.legend = FALSE) +
     expand_limits(x = c(0, sum(chr_len))) +
     expand_limits(y = c(0, max(esnps$logp) * 1.05)) +
@@ -79,19 +65,11 @@ p <- ggplot(esnps, aes(x = gpos, y = logp, color = gcolor)) +
     scale_color_manual(values = c("#984ea3", "#c698cd")) +
     theme_bw() +
     theme(
-        # legend.position = c(0.98, 0.95),
-        # legend.justification = c(1, 1),
-        # legend.background = element_rect(color = "black", size = 0.2),
-        # legend.spacing.y = unit(0, "pt"),
-        # legend.key.size = unit(15, "pt"),
         panel.grid.major = element_blank(),
         panel.grid.minor.y = element_blank(),
-        # legend.spacing.x = unit(0, "pt"),
-        # legend.margin = margin(0, 0, 0, 0),
         legend.box.margin = margin(0, 0, 0, -5, unit = "pt"),
     ) +
     xlab("Chromosome") +
     ylab(expression(-log[10](P[eQTL])))
 
 ggsave("figures/figure6/figure6a2.png", p, width = 7, height = 2)
-# * Make sure esnps isnt subsampled
