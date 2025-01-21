@@ -29,6 +29,10 @@ top <- eqtls |>
     arrange(pval_beta) |>
     slice(1:6)
 
+###########################
+## Locuszoom-style plots ##
+###########################
+
 # Load all gene-variant pairs for them and plot.
 pairs <- top |>
     mutate(gene_id = fct_inorder(gene_id)) |>
@@ -64,7 +68,7 @@ ranges <- egene_stats |>
     summarise(pos = c(tss - 1, tss + 1), .groups = "drop") |>
     mutate(log10p = 0, LD = 0)
 
-p1 <- pairs |>
+pairs |>
     mutate(log10p = -log10(pval_nominal),
            pos = pos / 1e6) |>
     ggplot(aes(x = pos, y = log10p, color = LD)) +
@@ -88,6 +92,8 @@ p1 <- pairs |>
     xlab("Position (Mb)") +
     ylab(expression(-log[10](P))) +
     labs(color = expression("LD "*(r^2)))
+
+ggsave("figures/figure3/figure3b1.png", width = 5, height = 4.5)
 
 ##################
 ## Effect plots ##
@@ -120,6 +126,7 @@ plot_eqtl <- function(df) {
         geom_boxplot(fill = "white", width = 0.1, outlier.size = 0.5) +
         scale_fill_manual(values = c("#ebfbe5", "#95e879", "#4ac021")) +
         xlab(NULL) +
+        # ylab("Normalized expression") +
         ylab(NULL) +
         theme_bw() +
         theme(
@@ -128,6 +135,7 @@ plot_eqtl <- function(df) {
             strip.text = element_text(color = "black"),
             plot.title = element_text(hjust = 0.5, size = 10),
         )
+        # ggtitle(unique(df$variant_id))
 }
 
 expr <- read_tsv("data/expression/ensembl-gene_inv-quant_NAcc.bed.gz",
@@ -151,6 +159,9 @@ p <- lapply(top$gene_id, function (x) {
         plot_eqtl()
 })
 
-p1 + (p[[1]] / p[[2]] / p[[3]] / p[[4]] / p[[5]] / p[[6]]) +
-    plot_layout(widths = c(2, 1))
-ggsave("figures/figure3/figure3b.png", width = 4, height = 7)
+(p[[1]] / p[[2]] / p[[3]] / p[[4]] / p[[5]] / p[[6]]) &
+    theme(
+        plot.margin = margin(t = -4, b = 1, r = 1, l = 1),
+    )
+
+ggsave("figures/figure3/figure3b2.png", width = 1.5, height = 7)

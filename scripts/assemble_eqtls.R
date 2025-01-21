@@ -103,6 +103,7 @@ eqtls_ind <- tibble(tissue = names(codes)) |>
     relocate(ref, alt, .after = pos)
 
 write_tsv(eqtls_ind, "data/eqtls/eqtls_indep.txt")
+write_tsv(eqtls_ind, "tables/Supp_Table_2.txt")
 
 ase <- tibble(tissue = names(codes)) |>
     group_by(tissue) |>
@@ -136,3 +137,4 @@ sqtls <- tibble(tissue = tissues) |>
     )
 
 write_tsv(sqtls, "data/splice/sqtls_indep.txt")
+write_tsv(sqtls, "tables/Supp_Table_5.txt")
