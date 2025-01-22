@@ -20,13 +20,13 @@ mac <- tibble(SNP = rownames(geno),
               AC = rowSums(geno)) |>
     mutate(AC = pmin(AC, (ncol(geno) * 2) - AC)) |>
     filter(AC / (ncol(geno) * 2) > 0.2) |>
-    separate(SNP, c("chrom", "pos"), sep = ":", convert = TRUE, remove = FALSE)
+    separate_wider_delim(SNP, ":", names = c("chrom", "pos"), cols_remove = FALSE) |>
+    mutate(pos = as.integer(pos))
 
 ld_pairs <- mac |>
-    group_by(chrom, AC) |>
-    summarise({
+    reframe({
         n_pairs <- round(0.01 * length(SNP) ^ 2)
-        print(str_glue("{unique(chrom)}, AC {unique(AC)}, {n_pairs} pairs"))
+        # print(str_glue("{unique(chrom)}, AC {unique(AC)}, {n_pairs} pairs"))
         sample1 <- sample.int(length(SNP), n_pairs, replace = TRUE)
         sample2 <- sample.int(length(SNP), n_pairs, replace = TRUE)
         tibble(SNP.x = SNP[sample1],
@@ -36,7 +36,7 @@ ld_pairs <- mac |>
             distinct() |>
             filter(pos.x < pos.y,
                    pos.y - pos.x <= MAX_DIST)
-    }, .groups = "drop") |>
+    }, .by = c(chrom, AC)) |>
     slice_sample(n = 1e6)
 
 ld <- ld_pairs |>

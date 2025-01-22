@@ -13,16 +13,34 @@ strains <- c(
 )
 
 d <- tibble(chrom = 1:3) |>
-    group_by(chrom) |>
-    summarise(
+    reframe(
         readRDS(str_glue("data/haplotypes/haplotype_probs_chr{chrom}.rds")) |>
             probs(),
-        .groups = "drop"
+        .by = chrom
     ) |>
-    group_by(SNP, Strain) |>
-    summarise(prob = mean(prob), .groups = "drop") |>
-    separate(SNP, c("chrom", "pos"), sep = ":", convert = TRUE) |>
-    mutate(pos = pos / 1e6)
+    summarise(prob = mean(prob), .by = c(SNP, Strain)) |>
+    separate_wider_delim(SNP, ":", names = c("chrom", "pos")) |>
+    mutate(pos = as.integer(pos) / 1e6)
+
+# I saved 2000 loci per chromosome, so get original counts to weight the probabilities.
+counts <- VariantAnnotation::readVcf("data/genotype/P50.rnaseq.88.unpruned.vcf.gz") |>
+    VariantAnnotation::info() |>
+    rownames() |>
+    str_replace("chr", "") |>
+    str_replace(":.+$", "") |>
+    table() |>
+    enframe(name = "chrom", value = "count") |>
+    mutate(chrom = as.integer(chrom)) |>
+    mutate(weight = count / sum(count))
+
+tot <- tibble(chrom = 1:20) |>
+    reframe(
+        readRDS(str_glue("data/haplotypes/haplotype_probs_chr{chrom}.rds")) |>
+            probs(),
+        .by = chrom
+    ) |>
+    left_join(counts, by = "chrom") |>
+    summarise(prob = weighted.mean(prob, weight), .by = Strain)
 
 d |>
     mutate(Strain = str_glue("{Strain} ({round(deframe(tot)[Strain] * 100, 1)}%)")) |>

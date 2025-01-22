@@ -16,13 +16,13 @@ run_anevah <- function(tissue) {
         str_glue("data/anevah/input/anevah_{tissue}_ref_counts.tsv"),
         header = TRUE,
         row.names = 1,
-        as.is = TRUE, #nrow = 100
+        as.is = TRUE,
     )
     alt_counts <- read.delim(
         str_glue("data/anevah/input/anevah_{tissue}_alt_counts.tsv"),
         header = TRUE,
         row.names = 1,
-        as.is = TRUE, #nrow = 100
+        as.is = TRUE,
     )
     anevah(ref_counts, alt_counts)
 }

@@ -11,9 +11,10 @@ d <- bind_rows(
     d_lm |> mutate(Method = "LM"),
     d_lmm |> mutate(Method = "LMM")
 ) |>
-    separate(rs, c("chrom", "pos"), sep=":", convert = TRUE) |>
-    mutate(chrom = str_replace(chrom, "chr", "")) |>
-    left_join(genes, by = "gene_id") |>
+    separate_wider_delim(rs, ":", names = c("chrom", "pos")) |>
+    mutate(chrom = str_replace(chrom, "chr", ""),
+           pos = as.integer(pos)) |>
+    left_join(genes, by = "gene_id", relationship = "many-to-one") |>
     mutate(type = case_when(
         gene_chrom == chrom & abs(pos - tss) < 1e6 ~ "cis",
         gene_chrom == chrom & abs(pos - tss) < 5e6 ~ "mid",
@@ -29,16 +30,15 @@ tmp <- d |>
     mutate(type = fct_recode(type,
                              "TSS distance < 1 Mb" = "cis",
                              "TSS distance > 5 Mb" = "trans")) |>
-    group_by(Method, type) |>
-    summarise(
+    reframe(
         p = p_wald,
         p_ref = ecdf(p)(p),
-        .groups = "drop"
+        .by = c(Method, type)
     )
 
 ggplot(tmp, aes(x = -log10(p_ref), y = -log10(p), color = Method)) +
     facet_wrap(~ type) +
-    geom_abline(slope = 1, intercept = 0, size = 0.5, lty = 2) +
+    geom_abline(slope = 1, intercept = 0, linewidth = 0.5, lty = 2) +
     geom_point(size = 0.5) +
     geom_text(data = tibble(p_ref = 10^-3.5, p = 10^-2.8, Method = NA,
                             type = "TSS distance < 1 Mb"),

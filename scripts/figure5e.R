@@ -6,15 +6,13 @@ load_gtex <- function(dir) {
 }
 
 rat <- tibble(tissue = c("IL", "LHb", "NAcc", "OFC", "PL")) |>
-    group_by(tissue) |>
-    summarise(
+    reframe(
         read_tsv(str_glue("data/gemma/{tissue}.cis_pve.txt"), col_types = "cd-"),
-        .groups = "drop"
+        .by = tissue
     ) |>
     filter(!is.na(pve)) |>
     mutate(pve = pmax(0, pmin(pve, 1))) |>
-    group_by(gene_id) |>
-    summarise(mean_h2_rat = mean(pve))
+    summarise(mean_h2_rat = mean(pve), .by = gene_id)
 
 gene_map <- read_tsv("data/gtex/orthologs.txt", col_types = "cc") |>
     mutate(gene_id_human = str_replace(gene_id_human, "\\..+$", ""))
@@ -25,15 +23,12 @@ human_genes <- read_tsv("data/gtex/human_genes.txt", col_types = "c-c") |>
 
 gtex <- tibble(dir = list.dirs("data/gtex/heritability/GTEx_v8_h2")) |>
     filter(str_detect(dir, "Brain")) |>
-    group_by(dir) |>
-    summarise(load_gtex(dir), .groups = "drop") |>
+    reframe(load_gtex(dir), .by = dir) |>
     filter(!is.na(h2cis)) |>
     mutate(h2cis = pmax(0, pmin(h2cis, 1))) |>
     left_join(human_genes, by = "Gene") |>
-    group_by(dir, gene_id) |>
-    summarise(h2cis = mean(h2cis), .groups = "drop") |>
-    group_by(gene_id) |>
-    summarise(mean_h2_human = mean(h2cis), .groups = "drop")
+    summarise(h2cis = mean(h2cis), .by = c(dir, gene_id)) |>
+    summarise(mean_h2_human = mean(h2cis), .by = gene_id)
 
 d <- gene_map |>
     inner_join(rat, by = c("gene_id_rat" = "gene_id")) |>

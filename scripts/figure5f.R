@@ -1,10 +1,9 @@
 library(tidyverse)
 
 rat <- tibble(tissue = c("IL", "LHb", "NAcc", "OFC", "PL")) |>
-    group_by(tissue) |>
-    summarise(
+    reframe(
         read_tsv(str_glue("data/anevah/output/Vg.{tissue}.tsv.gz"), col_types = "cd"),
-        .groups = "drop"
+        .by = tissue
     ) |>
     group_by(GENE_ID) |>
     summarise(SDg_rat = sqrt(mean(Vg)))
@@ -13,8 +12,7 @@ gtex <- read_tsv("data/anevah/gtex_phaser_vg.tsv.gz", col_types = cols(GENE_ID =
     pivot_longer(-GENE_ID, names_to = "tissue", values_to = "Vg") |>
     filter(str_sub(tissue, 1, 3) == "BRN",
            !is.na(Vg)) |>
-    group_by(GENE_ID) |>
-    summarise(SDg_GTEx = sqrt(mean(Vg)))
+    summarise(SDg_GTEx = sqrt(mean(Vg)), .by = GENE_ID)
 
 gene_map <- read_tsv("data/gtex/orthologs.txt", col_types = "cc") |>
     mutate(gene_id_human = str_replace(gene_id_human, "\\..+$", ""))

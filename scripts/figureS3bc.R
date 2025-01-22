@@ -4,14 +4,14 @@ library(patchwork)
 top_lm <- read_tsv("data/gemma/NAcc.lm.assoc.txt.gz",
                    col_types = "c-c------ddd") |>
     group_by(gene_id) |>
-    sample_n(1) |>
+    slice_sample(n = 1) |>
     ungroup() |>
     mutate(z = beta / se)
 
 top_lmm <- read_tsv("data/gemma/NAcc.lmm.assoc.txt.gz",
                     col_types = "c-c-----dd---d--") |>
     group_by(gene_id) |>
-    sample_n(1) |>
+    slice_sample(n = 1) |>
     ungroup() |>
     mutate(z = beta / se)
 
@@ -23,7 +23,7 @@ top <- full_join(
     top_lmm |> select(gene_id, p_lmm = p_wald, z_lmm = z),
     by = "gene_id"
 ) |>
-    left_join(pve, by = "gene_id")
+    left_join(pve, by = "gene_id", relationship = "one-to-one")
 
 ########################################
 ## Scatter plot of LMM vs LM z-scores ##
@@ -57,11 +57,12 @@ ggsave("figures/figureS3/figureS3b.png", width = 3.5, height = 3.5, device = png
 ###########################################
 
 overlap <- tibble(threshold = 10 ^ seq(from = -10, to = -2, length.out = 500)) |>
-    group_by(threshold) |>
-    summarise(`LM only` = sum(top$p_lm < threshold & top$p_lmm >= threshold),
-              `LMM only` = sum(top$p_lm >= threshold & top$p_lmm < threshold),
-              both = sum(top$p_lm < threshold & top$p_lmm < threshold),
-              .groups = "drop") |>
+    summarise(
+        `LM only` = sum(top$p_lm < threshold & top$p_lmm >= threshold),
+        `LMM only` = sum(top$p_lm >= threshold & top$p_lmm < threshold),
+        both = sum(top$p_lm < threshold & top$p_lmm < threshold),
+        .by = threshold
+    ) |>
     pivot_longer(-threshold, names_to = "group", values_to = "eGenes") |>
     mutate(group = fct_relevel(group, "LM only", "both", "LMM only"))
 
@@ -88,8 +89,7 @@ top |>
     summarise(Spearman_p = cor(abs(z_lm), abs(z_lmm), method = "spearman"))
 
 tibble(threshold = c(1e-9, 1e-6, 1e-3)) |>
-    group_by(threshold) |>
     summarise(both = sum(top$p_lm < threshold & top$p_lmm < threshold),
               total = sum(top$p_lm < threshold | top$p_lmm < threshold),
-              .groups = "drop") |>
+              .by = threshold) |>
     mutate(fraction = both / total)

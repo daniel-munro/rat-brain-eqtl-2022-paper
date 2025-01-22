@@ -19,7 +19,7 @@ bind_rows(
     gtex |> mutate(data = "GTEx"),
 ) |>
     mutate(data = fct_rev(data)) |>
-    ggplot(aes(x = MAF, y = ..scaled.., color = data)) +
+    ggplot(aes(x = MAF, y = after_stat(scaled), color = data)) +
     geom_density(adjust = 5, size = 0.8, outline.type = "full", show.legend = FALSE) +
     scale_x_continuous(expand = c(0.02, 0)) +
     scale_y_continuous(expand = c(0.02, 0), breaks = c(0, 50, 100, 150) / max_g,

@@ -75,9 +75,7 @@ df <- bind_rows(
     gsets |>
         filter(gene_id_human %in% orthologs,
                str_detect(set, "GWAS", negate = TRUE)) |>
-        group_by(set) |>
-        filter(n() >= 20) |>
-        ungroup(),
+        filter(n() >= 20, .by = set),
     gwas |>
         filter(gene_id_human %in% orthologs,
                trait %in% gwas_top_10) |>

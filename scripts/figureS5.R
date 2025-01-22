@@ -12,22 +12,22 @@ grid_locs <- cumsum(c(0, chr_len))
 labels <- read_tsv("data/coloc/trait_names.tsv", col_types = "cc")
 
 smr <- read_tsv("data/coloc/SMR.tsv", col_types = "cccdcddd") |>
-    group_by(tissue, trait) |>
-    mutate(sig = p_SMR < 0.05 / n()) |>
-    ungroup() |>
+    mutate(sig = p_SMR < 0.05 / n(),
+           .by = c(tissue, trait)) |>
     mutate(variant_id = str_replace(variant_id, "chr", ""),
            logp = -log10(p_SMR)) |>
-    separate(variant_id, c("chrom", "pos"), sep = ":", convert = TRUE) |>
-    mutate(gpos = pos + cumsum(c(0, chr_len))[chrom],
+    separate_wider_delim(variant_id, ":", names = c("chrom", "pos")) |>
+    mutate(chrom = as.integer(chrom),
+           pos = as.integer(pos),
+           gpos = pos + cumsum(c(0, chr_len))[chrom],
            gcolor = as.factor((chrom - 1) %% 2)) |>
     arrange(gpos)
 
 thresh <- smr |>
-    group_by(tissue, trait) |>
-    summarise(threshold = -log10(0.05 / n()), .groups = "drop") |>
-    group_by(tissue) |> # Within tissue they're almost identical
-    summarise(threshold = median(threshold)) |>
-    ungroup()
+    summarise(threshold = -log10(0.05 / n()),
+              .by = c(tissue, trait)) |>
+    summarise(threshold = median(threshold),
+              .by = tissue) # Within tissue they're almost identical
 
 smr |>
     filter(sig) |>
@@ -39,7 +39,7 @@ smr |>
     geom_point(aes(color = NULL), data = filter(smr, !sig, gcolor == 1), size = 0.5,
                color = "#bbbbbb", show.legend = FALSE) +
     geom_point(size = 1) +
-    geom_hline(aes(yintercept = threshold, color = tissue), data = thresh, size = 0.2, alpha = 0.5) +
+    geom_hline(aes(yintercept = threshold, color = tissue), data = thresh, linewidth = 0.2, alpha = 0.5) +
     geom_text(aes(color = NULL, shape = NULL, x = NULL, y = NULL, label = name),
               data = labels, x = sum(chr_len), hjust = 1, y = 9, show.legend = FALSE) +
     expand_limits(x = c(0, sum(chr_len))) +

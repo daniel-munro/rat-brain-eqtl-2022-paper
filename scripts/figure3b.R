@@ -21,7 +21,7 @@ eqtls <- read_tsv("data/eqtls/top_assoc.txt", col_types = "ccciiciiccdddddddd") 
 
 # Get samples to subset genotypes when calculating LD:
 samples <- read_tsv("data/samples.txt", col_types = "cc") |>
-    separate(library, c("rat_id", "old_tissue")) |>
+    separate_wider_delim(library, "_", names = c("rat_id", "old_tissue")) |>
     filter(brain_region == "NAcc")
 
 # Top 6 eQTLs
@@ -36,21 +36,20 @@ top <- eqtls |>
 # Load all gene-variant pairs for them and plot.
 pairs <- top |>
     mutate(gene_id = fct_inorder(gene_id)) |>
-    group_by(gene_id, gene_name) |>
-    summarise(
+    reframe(
         read_tsv(str_glue("data/tensorqtl/genes/AQCT.{gene_id}.txt.gz"),
                  col_types = "-ci---d--"),
-        .groups = "drop"
+        .by = c(gene_id, gene_name)
     ) |>
-    separate(variant_id, c("chrom", "pos"), sep=":", convert = TRUE,
-             remove = FALSE) |>
-    mutate(chrom = str_replace(chrom, "chr", "") |> as.integer()) |>
-    group_by(gene_id) |>
+    separate_wider_delim(variant_id, ":", names = c("chrom", "pos"),
+             cols_remove = FALSE) |>
+    mutate(chrom = str_replace(chrom, "chr", "") |> as.integer(),
+           pos = as.integer(pos)) |>
     mutate(top = pval_nominal == min(pval_nominal),
            LD = LD_with_top(variant_id, chrom, pos,
                             variant_id[top][ceiling(sum(top) / 2)],
-                            samples$rat_id)) |>
-    ungroup() |>
+                            samples$rat_id),
+           .by = gene_id) |>
     mutate(label = str_glue("{gene_name} (chr{chrom})") |>
                fct_inorder())
 
@@ -58,14 +57,13 @@ egene_stats <- pairs |>
     mutate(tss = (pos - tss_distance) / 1e6) |>
     distinct(gene_id, tss) |>
     left_join(select(eqtls, gene_id, gene_name, chrom, pval_nominal_threshold),
-              by = c("gene_id")) |>
+              by = "gene_id") |>
     mutate(log10_threshold = -log10(pval_nominal_threshold),
            label = str_glue("{gene_name} (chr{chrom})") |>
                factor(levels = levels(pairs$label)))
 
 ranges <- egene_stats |>
-    group_by(label) |>
-    summarise(pos = c(tss - 1, tss + 1), .groups = "drop") |>
+    reframe(pos = c(tss - 1, tss + 1), .by = label) |>
     mutate(log10p = 0, LD = 0)
 
 pairs |>
@@ -74,7 +72,7 @@ pairs |>
     ggplot(aes(x = pos, y = log10p, color = LD)) +
     facet_wrap(~ label, ncol = 1, scales = "free_x") +
     geom_hline(aes(yintercept = log10_threshold), data = egene_stats,
-               lty = "12", size = 0.5, color = "#555555") +
+               lty = "12", linewidth = 0.5, color = "#555555") +
     geom_vline(aes(xintercept = tss), data = egene_stats) +
     geom_point(size = 0.3) +
     expand_limits(y = 0) +
@@ -115,18 +113,15 @@ plot_eqtl <- function(df) {
                      str_glue("{ref}/{alt}"),
                      str_glue("{alt}/{alt}"))[geno + 1]
         ) |>
-        group_by(geno) |>
-        mutate(geno = str_glue("{geno}\n({n()})")) |>
         ungroup() |>
+        mutate(geno = str_glue("{geno}\n({n()})"), .by = geno) |>
         mutate(geno = fct_inorder(geno)) |>
         ggplot(aes(x = geno, y = expr, fill = geno)) +
-        # facet_wrap(~ variant_id, ncol = 3, scales = "free_x") +
         facet_wrap(~ variant_id) +
         geom_violin(show.legend = FALSE) +
         geom_boxplot(fill = "white", width = 0.1, outlier.size = 0.5) +
         scale_fill_manual(values = c("#ebfbe5", "#95e879", "#4ac021")) +
         xlab(NULL) +
-        # ylab("Normalized expression") +
         ylab(NULL) +
         theme_bw() +
         theme(
@@ -135,7 +130,6 @@ plot_eqtl <- function(df) {
             strip.text = element_text(color = "black"),
             plot.title = element_text(hjust = 0.5, size = 10),
         )
-        # ggtitle(unique(df$variant_id))
 }
 
 expr <- read_tsv("data/expression/ensembl-gene_inv-quant_NAcc.bed.gz",
@@ -144,12 +138,11 @@ expr <- read_tsv("data/expression/ensembl-gene_inv-quant_NAcc.bed.gz",
     pivot_longer(-gene_id, names_to = "rat_id", values_to = "expr")
 
 effect <- top |>
-    group_by(gene_id, gene_name, variant_id, chrom, pos, ref, alt) |>
-    summarise(
+    reframe(
         load_snp(chrom, pos) |>
             enframe(name = "rat_id", value = "geno") |>
             filter(rat_id %in% samples$rat_id),
-        .groups = "drop"
+        .by = c(gene_id, gene_name, variant_id, chrom, pos, ref, alt)
     ) |>
     left_join(expr, by = c("gene_id", "rat_id"))
 

@@ -5,8 +5,7 @@ expr_rat <- read_tsv("data/expression/medianGeneExpression.txt.gz",
     pivot_longer(-geneId, names_to = "tissue", values_to = "tpm") |>
     filter(tissue %in% c("IL", "LHb", "NAcc", "OFC", "PL")) |>
     rename(gene_id = geneId) |>
-    group_by(gene_id) |>
-    summarise(n_expr = sum(tpm > 1), .groups = "drop") |>
+    summarise(n_expr = sum(tpm > 1), .by = gene_id) |>
     filter(n_expr >= 1)
 
 expr_gtex <- read_tsv(
@@ -17,15 +16,12 @@ expr_gtex <- read_tsv(
     pivot_longer(-Name, names_to = "tissue", values_to = "tpm") |>
     filter(str_sub(tissue, 1, 5) == "Brain") |>
     mutate(gene_id = str_replace(Name, "\\..+$", "")) |>
-    group_by(gene_id) |>
-    summarise(n_expr = sum(tpm > 1), .groups = "drop") |>
+    summarise(n_expr = sum(tpm > 1), .by = gene_id) |>
     filter(n_expr >= 1)
 
 eqtl_rat <- read_tsv("data/eqtls/top_assoc.txt", col_types = "cc-------------d--") |>
     filter(gene_id %in% expr_rat$gene_id) |>
-    group_by(gene_id) |>
-    summarise(eqtl_rat = any(qval < 0.05),
-              .groups = "drop")
+    summarise(eqtl_rat = any(qval < 0.05), .by = gene_id)
 
 eqtl_gtex <- list.files("data/gtex/GTEx_Analysis_v8_eQTL", pattern = "*Brain_*",
                         full.names = TRUE) |>
@@ -33,9 +29,8 @@ eqtl_gtex <- list.files("data/gtex/GTEx_Analysis_v8_eQTL", pattern = "*Brain_*",
              col_types = cols(gene_id = "c", gene_name = "c", qval = "d", .default = "-")) |>
     mutate(gene_id = str_replace(gene_id, "\\..+$", "")) |>
     filter(gene_id %in% expr_gtex$gene_id) |>
-    group_by(gene_id, gene_name) |>
     summarise(eqtl_gtex = any(qval <= 0.05),
-              .groups = "drop")
+              .by = c(gene_id, gene_name))
 
 pli <- read_tsv("data/human/forweb_cleaned_exac_r03_march16_z_data_pLI.txt.gz",
                 col_types = "-c-----------------d")
@@ -56,11 +51,10 @@ d <- read_tsv("data/gtex/orthologs.txt", col_types = "cc") |>
     )
 
 d_stats <- d |>
-    group_by(eqtl) |>
     summarise(mean_pLI = mean(pLI),
               SE_pLI = sd(pLI) / sqrt(length(pLI)),
               n = n(),
-              .groups = "drop")
+              .by = eqtl)
 
 ##############################
 ## Point plot: figure panel ##

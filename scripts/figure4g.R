@@ -39,7 +39,6 @@ snp_counts <- vep |>
            ssnp_PL = sum(ssnp_PL)))
 
 enrich <- vep |>
-    group_by(Consequence) |>
     summarise(esnp_IL = sum(esnp_IL),
               esnp_LHb = sum(esnp_LHb),
               esnp_NAcc = sum(esnp_NAcc),
@@ -51,26 +50,25 @@ enrich <- vep |>
               ssnp_OFC = sum(ssnp_OFC),
               ssnp_PL = sum(ssnp_PL),
               n_total = n(),
-              .groups = "drop") |>
+              .by = Consequence) |>
     pivot_longer(esnp_IL:ssnp_PL, names_to = "type_tissue", values_to = "n_xsnp") |>
     mutate(
         frac_xsnp = n_xsnp / snp_counts[type_tissue],
         frac_total = n_total / n_distinct(vep$variant_id),
         log2_enrich = log2(frac_xsnp / frac_total)
     ) |>
-    separate(type_tissue, c("type", "tissue")) |>
+    separate_wider_delim(type_tissue, "_", names = c("type", "tissue")) |>
     mutate(Consequence = fct_relevel(Consequence, labels)) |>
     arrange(Consequence)
 
 p1 <- enrich |>
     filter(type == "esnp") |>
-    group_by(Consequence) |>
     summarise(mean_enr = mean(log2_enrich),
               sd_enr = sd(log2_enrich),
-              .groups = "drop") |>
+              .by = Consequence) |>
     mutate(Consequence = fct_rev(Consequence)) |>
     ggplot(aes(x = Consequence, y = mean_enr, ymin = mean_enr - sd_enr,
-               ymax = mean_enr + sd_enr, color = type)) +
+               ymax = mean_enr + sd_enr)) +
     geom_pointrange(fatten = 1) +
     geom_hline(yintercept = 0, lty = 2) +
     coord_flip() +
@@ -80,10 +78,9 @@ p1 <- enrich |>
     ylab(expression(log[2]*" fold enrichment in eSNPs"))
 
 p2 <- enrich |>
-    group_by(Consequence, type) |>
     summarise(mean_frac = mean(frac_xsnp),
               sd_frac = sd(frac_xsnp),
-              .groups = "drop") |>
+              .by = c(Consequence, type)) |>
     mutate(Consequence = fct_rev(Consequence),
            type = type |> fct_recode(eSNPs = "esnp", sSNPs = "ssnp") |> fct_rev()) |>
     ggplot(aes(x = Consequence, y = mean_frac, ymin = mean_frac - sd_frac,
@@ -97,7 +94,8 @@ p2 <- enrich |>
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           panel.grid = element_blank(),
-          legend.position = c(0.6, 0.75),
+          legend.position = "inside",
+          legend.position.inside = c(0.6, 0.75),
           legend.key.size = unit(10, "pt"),
           legend.spacing.x = unit(5, "pt"),
           legend.title = element_blank()) +

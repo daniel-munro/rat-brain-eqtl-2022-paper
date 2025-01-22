@@ -2,8 +2,7 @@ library(tidyverse)
 
 eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "ccciiciiccdddddid") |>
     filter(rank == 1) |>
-    group_by(gene_id) |>
-    summarise(mean_abs_rat = mean(abs(log2_aFC)))
+    summarise(mean_abs_rat = mean(abs(log2_aFC)), .by = gene_id)
 
 # Get homologs
 # (https://www.r-bloggers.com/2016/10/converting-mouse-to-human-gene-names-with-biomart-package/)
@@ -29,9 +28,8 @@ gtex <- list.files("data/gtex/GTEx_Analysis_v8_eQTL", pattern = "*Brain_*",
                               log2_aFC = "d", .default = "-")) |>
     filter(qval <= 0.05) |>  # GTEx site says to do <=
     mutate(gene_id = str_replace(gene_id, "\\..+$", "")) |>
-    group_by(gene_id) |>
     summarise(mean_abs_human = mean(abs(log2_aFC)),
-              .groups = "drop")
+              .by = gene_id)
 
 # All homolog pairs with eQTLs in rat and human brain:
 d <- gene_map |>
@@ -80,9 +78,8 @@ gtex_nonbrain <- gtex_nonbrain[str_detect(gtex_nonbrain, "Brain", negate = TRUE)
                               log2_aFC = "d", .default = "-")) |>
     filter(qval <= 0.05) |>  # GTEx site says to do <=
     mutate(gene_id = str_replace(gene_id, "\\..+$", "")) |>
-    group_by(gene_id) |>
     summarise(mean_abs_human = mean(abs(log2_aFC)),
-              .groups = "drop")
+              .by = gene_id)
 
 # All homolog pairs with eQTLs in rat and human brain:
 d_nonbrain <- gene_map |>
@@ -109,11 +106,10 @@ gtex2 <- list.files("data/gtex/GTEx_Analysis_v8_eQTL", pattern = "*Brain_*",
              col_types = cols(gene_id = "c", qval = "d", maf = "d",
                               log2_aFC = "d", .default = "-")) |>
     filter(qval <= 0.05) |>  # GTEx site says to do <=
-    group_by(gene_id) |>
     summarise(mean_maf = mean(maf),
               mean_abs_human = mean(abs(log2_aFC)),
-              .groups = "drop")
+              .by = gene_id)
 gtex2 |>
     ggplot(aes(x = mean_maf, y = mean_abs_human)) +
     geom_point(size = 0.2, alpha = 0.5) +
-    geom_smooth
+    geom_smooth()

@@ -36,29 +36,25 @@ geno_sim <- function(pairs = 50, generations = 90, mating = "circular") {
 }
 
 genos <- tibble(permutation = 1:200) |>
-    group_by(permutation) |>
-    summarise(geno_sim(generations = 90), .groups = "drop")
+    reframe(geno_sim(generations = 90), .by = permutation)
 
 counts <- genos |>
-    group_by(permutation, generation) |>
-    summarise(
+    reframe(
         tibble(strain = c(unlist(female), unlist(male))) |>
             count(strain),
-        .groups = "drop"
+        .by = c(permutation, generation)
     )
 
 write_tsv(counts, "data/haplotypes/breeding_sim_circ.tsv")
 
 genos2 <- tibble(permutation = 1:200) |>
-    group_by(permutation) |>
-    summarise(geno_sim(generations = 90, mating = "random"), .groups = "drop")
+    reframe(geno_sim(generations = 90, mating = "random"), .by = permutation)
 
 counts2 <- genos2 |>
-    group_by(permutation, generation) |>
-    summarise(
+    reframe(
         tibble(strain = c(unlist(female), unlist(male))) |>
             count(strain),
-        .groups = "drop"
+        .by = c(permutation, generation)
     )
 
 write_tsv(counts2, "data/haplotypes/breeding_sim_rand.tsv")
@@ -84,13 +80,11 @@ chr_len <- c(282763074, 266435125, 177699992, 184226339, 173707219,
 n_SNPs <- round(2000 * chr_len / chr_len[1])
 
 d <- tibble(chrom = 1:20) |>
-    group_by(chrom) |>
-    summarise(
+    reframe(
         readRDS(str_glue("data/haplotypes/haplotype_probs_chr{chrom}.rds")) |>
             probs(n_SNPs = n_SNPs[chrom]) |>
-            group_by(SNP, strain) |>
-            summarise(prob = mean(prob), .groups = "drop"),
-        .groups = "drop"
+            summarise(prob = mean(prob), .by = c(SNP, strain)),
+        .by = chrom
     ) |>
     mutate(SNP = as.integer(as.factor(SNP))) |>
     filter(SNP %in% sample(unique(SNP), 200, replace = FALSE))
@@ -110,23 +104,18 @@ counts <- bind_rows(
     sim_circ |>
         mutate(data = "Simulated - circular mating") |>
         rename(SNP = permutation) |>
-        group_by(generation, SNP) |>
-        mutate(prob = n / sum(n)) |>
-        ungroup() |>
+        mutate(prob = n / sum(n), .by = c(generation, SNP)) |>
         select(-n),
     sim_rand |>
         mutate(data = "Simulated - random mating") |>
         rename(SNP = permutation) |>
-        group_by(generation, SNP) |>
-        mutate(prob = n / sum(n)) |>
-        ungroup() |>
+        mutate(prob = n / sum(n), .by = c(generation, SNP)) |>
         select(-n)
 )
 
 entropies <- counts |>
-    group_by(data, SNP, generation) |>
     summarise(entropy = entropy::entropy.empirical(prob, unit = "log2"),
-              .groups = "drop")
+              .by = c(data, SNP, generation))
 
 entropies |>
     filter(generation <= 80,
@@ -141,7 +130,8 @@ entropies |>
     scale_fill_manual(values = c("#37a9bf", "#376dbf", "#b03884")) +
     theme_bw() +
     theme(
-        legend.position = c(0.21, 0.25),
+        legend.position = "inside",
+        legend.position.inside = c(0.21, 0.25),
         legend.title = element_blank(),
         panel.grid = element_blank(),
     ) +

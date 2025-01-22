@@ -21,16 +21,13 @@ p1 <- egenes |>
 
 # Num eGenes found in N tissues
 tmp <- egenes |>
-    group_by(gene_id) |>
-    summarise(n_tissues = n()) |>
-    ungroup() |>
+    summarise(n_tissues = n(), .by = gene_id) |>
     count(n_tissues)
 p2 <- ggplot(tmp, aes(x = n_tissues, y = n, fill = n_tissues)) +
     geom_col(show.legend = FALSE) +
     scale_y_continuous(expand = c(0, 0), limits = c(0, max(tmp$n) * 1.02)) +
     scale_fill_viridis_c() +
     xlab("No. tissues") +
-    # ylab("eGenes (5% FDR)") +
     ylab("eGenes") +
     theme_bw() +
     theme(panel.grid = element_blank())
@@ -59,9 +56,7 @@ p3 <- sgenes |>
 
 # Num sGenes found in N tissues
 tmp2 <- sgenes |>
-    group_by(gene_id) |>
-    summarise(n_tissues = n()) |>
-    ungroup() |>
+    summarise(n_tissues = n(), .by = gene_id) |>
     count(n_tissues)
 p4 <- ggplot(tmp2, aes(x = n_tissues, y = n, fill = n_tissues)) +
     geom_col(show.legend = FALSE) +

@@ -9,9 +9,7 @@ d <- tibble(start = runif(segs),
             chrom = sample(1:N_CHROMS, segs, replace = TRUE)) |>
     bind_rows(tibble(start = 0, chrom = 1:N_CHROMS)) |>
     arrange(chrom, start) |>
-    group_by(chrom) |>
-    mutate(end = lead(start, default = 1)) |>
-    ungroup() |>
+    mutate(end = lead(start, default = 1), .by = chrom) |>
     mutate(strain = sample(1:8, n(), replace = TRUE) |> as.factor())
 
 ggplot(d, aes(xmin = chrom, xmax = chrom + 0.9, ymin = start, ymax = end,

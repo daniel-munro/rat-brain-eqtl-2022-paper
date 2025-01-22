@@ -68,7 +68,7 @@ d <- eqtls |>
     distinct(tissue, gene_id) |>
     mutate(eqtl = TRUE) |>
     complete(gene_id, tissue, fill = list(eqtl = FALSE)) |>
-    pivot_wider(gene_id, names_from = tissue, values_from = eqtl)
+    pivot_wider(id_cols = gene_id, names_from = tissue, values_from = eqtl)
 
 with(d, sum(IL & PL & OFC & !LHb & !NAcc)) # Highest 3-tissue eGene set
 with(d, sum(NAcc & PL & OFC & !LHb & !IL)) # Next-highest 3-tissue eGene set

@@ -4,19 +4,16 @@ library(patchwork)
 # Using upper-quartile-scaled values. From my understanding all processing up to these files was done as a combined dataset.
 
 expr <- tibble(tissue = c("IL", "LHb", "NAcc", "OFC", "PL")) |>
-    group_by(tissue) |>
-    summarise(
+    reframe(
         read_tsv(str_glue("data/expression/ensembl-gene_log2_{tissue}.bed.gz"),
                  col_types = cols(`#chr` = "-", start = "-", end = "-",
                                   gene_id = "c", .default = "d")) |>
             pivot_longer(-gene_id, names_to = "rat_id", values_to = "expr"),
-        .groups = "drop"
+        .by = tissue
     ) |>
-    group_by(gene_id) |>
-    filter(n_distinct(tissue) == 5) |>
-    ungroup() |>
-    pivot_wider(c(rat_id, tissue), names_from = gene_id, values_from = expr)
-tmp <- str_c(expr$rat_id, expr$tissue, sep="_")
+    filter(n_distinct(tissue) == 5, .by = gene_id) |>
+    pivot_wider(id_cols = c(rat_id, tissue), names_from = gene_id, values_from = expr)
+tmp <- str_glue("{expr$rat_id}_{expr$tissue}")
 expr <- expr |>
     select(-rat_id, -tissue) |>
     as.data.frame()
@@ -25,7 +22,7 @@ rownames(expr) <- tmp
 pca <- prcomp(expr, scale. = TRUE)
 d <- pca$x[, 1:4] |>
     as_tibble(rownames = "sample") |>
-    separate(sample, c("rat_id", "tissue"), sep = "_")
+    separate_wider_delim(sample, "_", names = c("rat_id", "tissue"))
 
 eig <- pca$sdev ^ 2
 pve <- (100 * eig / sum(eig)) |> round()

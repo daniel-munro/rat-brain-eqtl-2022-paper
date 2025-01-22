@@ -15,6 +15,6 @@ kept <- read_csv("data/anevah/Vg_estimates_phaser_tuned.csv",
 
 vg_filt <- vg |>
     inner_join(kept, by = c("tissue", "GENE_ID")) |>
-    pivot_wider(GENE_ID, names_from = tissue, values_from = Vg_GeneWise)
+    pivot_wider(id_cols = GENE_ID, names_from = tissue, values_from = Vg_GeneWise)
 
 write_tsv(vg_filt, "data/anevah/gtex_phaser_vg.tsv.gz")

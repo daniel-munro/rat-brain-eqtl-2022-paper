@@ -11,8 +11,8 @@ d <- read_tsv("data/gtex/orthologs/ortholog_SDg.tsv", col_types = "ccdd")
 gsets <- read_tsv("data/gtex/orthologs/gene_sets.tsv", col_types = "cc")
 
 d_sets <- d |>
-    inner_join(gsets, by = "gene_id_human") |>
-    select(-gene_id_rat,-gene_id_human) |>
+    inner_join(gsets, by = "gene_id_human", relationship = "many-to-many") |>
+    select(-gene_id_rat, -gene_id_human) |>
     pivot_longer(
         c(SDg_rat, SDg_GTEx),
         names_prefix = "SDg_",
@@ -20,12 +20,11 @@ d_sets <- d |>
         values_to = "SDg"
     ) |>
     mutate(organism = c(rat = "Rat", GTEx = "Human")[organism]) |>
-    group_by(set, organism) |>
     summarise(
         SDg_median = median(SDg),
         CI = CI(SDg, median) |> list(),
         n = n(),
-        .groups = "drop"
+        .by = c(set, organism)
     ) |>
     unnest_wider(CI) |>
     mutate(set = set |>
@@ -37,8 +36,7 @@ median_all <- d |>
     pivot_longer(c(SDg_rat, SDg_GTEx), names_prefix = "SDg_",
                  names_to = "organism", values_to = "SDg") |>
     mutate(organism = c(rat = "Rat", GTEx = "Human")[organism]) |>
-    group_by(organism) |>
-    summarise(median = median(SDg))
+    summarise(median = median(SDg), .by = organism)
 
 size_labels <- d_sets |>
     filter(organism == "Human") |>

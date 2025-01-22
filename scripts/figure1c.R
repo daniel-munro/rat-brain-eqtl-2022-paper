@@ -22,13 +22,12 @@ ld |>
 
 ld_mean <- ld |>
     mutate(dist_bin = cut_interval(distance, N_BINS, labels = FALSE)) |>
-    group_by(data, dist_bin) |>
-    summarise(r2_mean = mean(r2), .groups = "drop") |>
+    summarise(r2_mean = mean(r2), .by = c(data, dist_bin)) |>
     mutate(bin_mid = ((dist_bin - 0.5) / N_BINS) * MAX_DIST / 1e6)
 
 ld_mean |>
     ggplot(aes(x = bin_mid, y = r2_mean, color = data)) +
-    geom_line(size = 0.8, show.legend = FALSE) +
+    geom_line(linewidth = 0.8, show.legend = FALSE) +
     scale_x_continuous(breaks = c(0, 2, 4, 6, 8, 10),
                        expand = c(0.01, 0.01)) +
     scale_y_continuous(expand = c(0.002, 0.002)) +

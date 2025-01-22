@@ -27,11 +27,10 @@ top_eSNPs <- function(tissue, genes, snps) {
 
 gwas_dir <- "data/coloc/adiposity_GWAS/"
 gwas <- tibble(file = list.files(gwas_dir)) |>
-    group_by(file) |>
-    summarise(
+    reframe(
         read_tsv(str_c(gwas_dir, file), col_types = "-c-----dd------",
                  col_names = c("variant_id", "slope", "slope_se")),
-        .groups = "drop"
+        .by = file
     ) |>
     mutate(trait = str_match(file, "allChr_physiological_(.+)\\.assoc\\.txt")[, 2], .before = 1) |>
     select(-file) |>
@@ -43,21 +42,18 @@ eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "cc---c-----------")
 df <- eqtls |>
     ## Get tied top eSNPs per eGene that were tested in GWAS (not necessarily top overall)
     distinct(tissue, gene_id) |>
-    group_by(tissue) |>
-    summarise(top_eSNPs(unique(tissue), gene_id, unique(gwas$variant_id)),
-              .groups = "drop") |>
+    reframe(top_eSNPs(unique(tissue), gene_id, unique(gwas$variant_id)),
+            .by = tissue) |>
     mutate(z_eQTL = slope / slope_se) |>
     select(-pval_nominal, -slope, -slope_se) |>
     ## Join with GWAS scores and calculate SMR
-    inner_join(gwas, by = "variant_id") |>
+    inner_join(gwas, by = "variant_id", relationship = "many-to-many") |>
     mutate(T_SMR = T_SMR(z_eQTL, z_GWAS),
            p_SMR = p_SMR(T_SMR))
 
 write_tsv(df, "data/coloc/SMR.tsv")
 
 sig <- df |>
-    group_by(tissue, trait) |>
-    filter(p_SMR < 0.05 / n()) |>
-    ungroup()
+    filter(p_SMR < 0.05 / n(), .by = c(tissue, trait))
 
 write_tsv(sig, "data/coloc/SMR_sig.tsv")

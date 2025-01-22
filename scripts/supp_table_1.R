@@ -10,24 +10,24 @@ meta <- read_csv("data/qc/metadata/metadata_p50_hao_chen_2014.csv",
     mutate(tissue = tissues[brain_region])
 
 sample_counts <- meta |>
-    group_by(tissue) |>
     summarise(
         n_initial_samples = n(),
         n_sequencing_QC_pass = sum(QC_reads == "pass"),
         n_geno_match_QC_pass = sum(QC_reads == "pass" & QC_geno_match == "pass"),
         n_expression_QC_pass = sum(QC_pass == "pass"),
+        .by = tissue
     )
 
 # Read counts etc. are just for final sample sets
 other_stats <- meta |>
     filter(QC_pass == "pass") |>
-    group_by(tissue) |>
     summarise(
         raw_reads_total = sum(raw_reads),
         raw_reads_mean = mean(raw_reads),
         raw_reads_SD = sd(raw_reads),
         unique_mapped_reads_mean = mean(uniq_mapped_reads),
         unique_mapped_reads_SD = sd(uniq_mapped_reads),
+        .by = tissue
     )
 
 # Counts of reads used in gene quantification for final sample sets
@@ -44,29 +44,26 @@ expr_reads_stats <- expr_reads |>
     mutate(rat_id = str_sub(library, 1, 10),
            tissue = str_sub(library, 12),
            tissue = tissues[tissue]) |> # For speed
-    group_by(tissue, rat_id) |>
     summarise(count = sum(count),
-              .groups = "drop") |>
-    group_by(tissue) |>
+              .by = c(tissue, rat_id)) |>
     summarise(expr_quant_reads_mean = mean(count),
               expr_quant_reads_SD = sd(count),
-              .groups = "drop")
+              .by = tissue)
 
 # Expressed gene count
 expr <- tibble(tissue = c("IL", "LHb", "NAcc", "OFC", "PL")) |>
-    group_by(tissue) |>
-    summarise(
+    reframe(
         read_tsv(str_glue("data/expression/ensembl-gene_log2_{tissue}.bed.gz"),
                  col_types = cols(gene_id = "c", .default = "-")) |>
             count(name = "n_expressed_genes"),
-        .groups = "drop"
+        .by = tissue
     )
 
 # Combine
 d <- sample_counts |>
-    left_join(other_stats, by = "tissue") |>
-    left_join(expr_reads_stats, by = "tissue") |>
-    left_join(expr, by = "tissue") |>
+    left_join(other_stats, by = "tissue", relationship = "one-to-one") |>
+    left_join(expr_reads_stats, by = "tissue", relationship = "one-to-one") |>
+    left_join(expr, by = "tissue", relationship = "one-to-one") |>
     pivot_longer(-tissue, names_to = "Stat") |>
     mutate(value = value |> round()) |>
     pivot_wider(id_cols = Stat, names_from = tissue, values_from = value)

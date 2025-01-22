@@ -14,18 +14,16 @@ strains <- c(
 )
 
 d <- tibble(chrom = 1:20) |>
-    group_by(chrom) |>
-    summarise(
+    reframe(
         readRDS(str_glue("data/haplotypes/haplotype_probs_chr{chrom}.rds")) |>
             probs(),
-        .groups = "drop"
+        .by = chrom
     )
 
 mean_probs <- d |>
-    group_by(SNP, Strain) |>
-    summarise(prob = mean(prob), .groups = "drop") |>
-    separate(SNP, c("chrom", "pos"), sep = ":", convert = TRUE) |>
-    mutate(pos = pos / 1e6,
+    summarise(prob = mean(prob), .by = c(SNP, Strain)) |>
+    separate_wider_delim(SNP, ":", names = c("chrom", "pos")) |>
+    mutate(pos = as.integer(pos) / 1e6,
            chrom = factor(chrom, levels = str_c("chr", 1:20)))
 
 mean_probs |>
@@ -42,7 +40,7 @@ mean_probs |>
         axis.text.y = element_blank(),
         panel.grid = element_blank(),
         axis.ticks.y = element_blank(),
-        axis.line.x = element_line(size = 0.25),
+        axis.line.x = element_line(linewidth = 0.25),
         panel.border = element_blank(),
         strip.background = element_blank(),
         legend.position = "top",

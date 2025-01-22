@@ -23,15 +23,13 @@ expr <- read.table("data/expression/ensembl-gene_raw-counts.txt",
     filter(gene_id %in% genes$gene_id) |>
     pivot_longer(-gene_id, names_to = "library", values_to = "expr") |>
     filter(library %in% samples$library) |>
-    left_join(samples, by = "library")
+    left_join(samples, by = "library", relationship = "many-to-one")
 expr_frac <- expr |>
-    group_by(brain_region, gene_id) |>
     summarise(frac_expr = mean(expr >= min_reads),
               frac_nonzero = mean(expr > 0),
-              .groups = "drop")
+              .by = c(brain_region, gene_id))
 
 spec_expr <- expr_frac |>
-    group_by(gene_id) |>
     group_by(gene_id) |>
     arrange(desc(frac_expr)) |>
     summarise(top_expr_tissue = brain_region[1],
@@ -58,19 +56,18 @@ spec_expr |>
 egenes <- filter(top_assoc, qval < 0.05)
 
 expr_cutoffs <- tibble(cutoff = c(1, 2, 5, 10, 20, 50, 100)) |>
-    group_by(cutoff) |>
-    summarise(
+    reframe(
         expr |>
-            group_by(brain_region, gene_id) |>
             summarise(frac_expr = mean(expr >= cutoff),
-                      .groups = "drop"),
-        .groups = "drop"
+                      .by = c(brain_region, gene_id)),
+        .by = cutoff
     ) |>
     left_join(
         egenes |>
             select(brain_region = tissue, gene_id) |>
             mutate(is_eGene = TRUE),
-        by = c("brain_region", "gene_id")
+        by = c("brain_region", "gene_id"),
+        relationship = "many-to-one"
     ) |>
     replace_na(list(is_eGene = FALSE))
 
@@ -81,14 +78,14 @@ expr_cutoffs |>
     geom_boxplot(alpha = 0.5, outlier.size = 0.25)
 
 expr |>
-    group_by(brain_region, gene_id) |>
     summarise(median_count = median(expr),
-              .groups = "drop") |>
+              .by = c(brain_region, gene_id)) |>
     left_join(
         egenes |>
             select(brain_region = tissue, gene_id) |>
             mutate(is_eGene = TRUE),
-        by = c("brain_region", "gene_id")
+        by = c("brain_region", "gene_id"),
+        relationship = "one-to-one"
     ) |>
     replace_na(list(is_eGene = FALSE)) |>
     ggplot(aes(x = median_count, fill = is_eGene)) +

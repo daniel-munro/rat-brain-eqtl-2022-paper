@@ -14,8 +14,10 @@ esnps <- read_tsv("data/tensorqtl/PQCT.cis_qtl_signif.txt.gz", col_types = "cc--
     filter(gene_id %in% eqtls$gene_id) |>
     mutate(variant_id = str_replace(variant_id, "chr", ""),
            logp = -log10(pval_nominal)) |>
-    separate(variant_id, c("chrom", "pos"), sep = ":", convert = TRUE) |>
-    mutate(gpos = pos + cumsum(c(0, chr_len))[chrom],
+    separate_wider_delim(variant_id, ":", names = c("chrom", "pos")) |>
+    mutate(chrom = as.integer(chrom),
+           pos = as.integer(pos),
+           gpos = pos + cumsum(c(0, chr_len))[chrom],
            gcolor = as.factor((chrom - 1) %% 2)) |>
     arrange(gpos)
 
@@ -24,8 +26,10 @@ gwas <- read_tsv("data/coloc/adiposity_GWAS/allChr_physiological_retrofat.assoc.
                  col_names = c("variant_id", "p_score")) |>
     mutate(variant_id = str_replace(variant_id, "chr", ""),
            logp = -log10(p_score)) |>
-    separate(variant_id, c("chrom", "pos"), sep = ":", convert = TRUE) |>
-    mutate(gpos = pos + cumsum(c(0, chr_len))[chrom],
+    separate_wider_delim(variant_id, ":", names = c("chrom", "pos")) |>
+    mutate(chrom = as.integer(chrom),
+           pos = as.integer(pos),
+           gpos = pos + cumsum(c(0, chr_len))[chrom],
            gcolor = as.factor((chrom - 1) %% 2)) |>
     arrange(gpos)
 
@@ -34,8 +38,10 @@ smr <- read_tsv("data/coloc/SMR_sig.tsv", col_types = "cccdcddd") |>
            trait == "retrofat") |>
     mutate(variant_id = str_replace(variant_id, "chr", ""),
            logp = -log10(p_SMR)) |>
-    separate(variant_id, c("chrom", "pos"), sep = ":", convert = TRUE) |>
-    mutate(gpos = pos + cumsum(c(0, chr_len))[chrom]) |>
+    separate_wider_delim(variant_id, ":", names = c("chrom", "pos")) |>
+    mutate(chrom = as.integer(chrom),
+           pos = as.integer(pos),
+           gpos = pos + cumsum(c(0, chr_len))[chrom]) |>
     arrange(gpos)
 
 ggplot(gwas, aes(x = gpos, y = logp, color = gcolor)) +

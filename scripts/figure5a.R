@@ -8,7 +8,7 @@ sample_size <- read_tsv("data/samples.txt", col_types = "cc") |>
     deframe()
 
 genes_tested <- read_tsv("data/genes.txt", col_types = "c------lllll") |>
-    summarise(tribble(
+    reframe(tribble(
         ~tissue, ~expressedGeneCount,
         "IL", sum(in_expr_IL),
         "LHb", sum(in_expr_LHb),
@@ -33,12 +33,11 @@ gtex_tissues <- jsonlite::fromJSON("data/gtex/tissueInfo.json")[[1]] |>
 
 gtex_subsam <- gtex_tissues |>
     filter(group == "Human brain") |>
-    group_by(tissue) |>
     summarise(
         read_tsv(str_glue("data/gtex/subsample/{tissue}.cis_qtl.txt.gz"),
                  col_types = cols(qval = "d", .default = "-")) |>
             summarise(eGeneCount = sum(qval <= 0.05)),
-        .groups = "drop"
+        .by = tissue
     ) |>
     mutate(sample_size = 81L,
            group = "Human brain\n(subsampled)")
@@ -50,7 +49,7 @@ gtex_subsam <- gtex_tissues |>
 colors <- RColorBrewer::brewer.pal(3, "Set1") # Darker, swap blue and green so brain is blue
 bind_rows(rat_tissues, gtex_tissues) |>
     ggplot(aes(x = sample_size, y = eGeneCount, color = group, shape = group)) +
-    geom_point(size = 1) + #, alpha = 0.75) +
+    geom_point(size = 1) +
     scale_color_manual(values = colors) +
     geom_boxplot(aes(shape = NULL), data = gtex_subsam, color = colors[2],
                  width = 0.4, show.legend = FALSE) +
@@ -64,7 +63,7 @@ bind_rows(rat_tissues, gtex_tissues) |>
     theme(
         legend.title = element_blank(),
         legend.position = c(0.7, 0.15),
-        legend.background = element_rect(color = "black", size = 0.1),
+        legend.background = element_rect(color = "black", linewidth = 0.1),
         legend.spacing.y = unit(-2, "pt"),
         legend.key.width = unit(2, "pt"),
         legend.key.height = unit(8, "pt"),

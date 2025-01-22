@@ -8,9 +8,9 @@ eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "ccciiciiccdddddid")
 
 # Number of significant eGenes per tissue:
 top_assoc |>
-    group_by(tissue) |>
     summarise(n = sum(qval < 0.05),
-              total = n()) |>
+              total = n(),
+              .by = tissue) |>
     mutate(frac = n / total)
 
 # Total unique eGenes:
@@ -18,8 +18,7 @@ n_distinct(egenes$gene_id)
 
 # eGenes found in N tissues:
 egenes |>
-    group_by(gene_id) |>
-    summarise(n_tissues = n(), .groups = "drop") |>
+    summarise(n_tissues = n(), .by = gene_id) |>
     count(n_tissues) |>
     mutate(frac = n / sum(n))
 
@@ -32,10 +31,9 @@ eqtls |>
 
 # Additional eQTLs per tissue
 eqtls |>
-    group_by(tissue) |>
     summarise(n = sum(rank > 1),
               perc_incr = n / sum(rank == 1),
-              .groups = "drop") |>
+              .by = tissue) |>
     summarise(mean_n = mean(n),
               mean_perc_incr = mean(perc_incr))
 
@@ -48,7 +46,7 @@ eqtls |>
 
 # Count samples:
 samples <- read_tsv("data/samples.txt", col_types = "cc") |>
-    separate(library, into = c("rat_id", "tissue"))
+    separate_wider_delim(library, "_", names = c("rat_id", "tissue"))
 count(samples, brain_region)
 n_distinct(samples$rat_id)
 
@@ -62,14 +60,13 @@ nrow(eqtls) + nrow(sqtls)
 
 expr <- eqtls |>
     distinct(tissue) |>
-    group_by(tissue) |>
-    summarise(
+    reframe(
         read_tsv(
             str_glue("data/expression/ensembl-gene_log2_{tissue}.bed.gz"),
             col_types = cols(`#chr` = '-', start = '-', end = '-', gene_id = 'c', .default = 'd')
         ) |>
             pivot_longer(-gene_id, names_to = 'sample', values_to = 'expr'),
-        .groups = "drop"
+        .by = tissue
     )
 
 # These tables are already filtered, so I'll just count the genes in them:
@@ -84,8 +81,7 @@ expr |>
         select(egenes, tissue, gene_id, qval),
         by = c("tissue", "gene_id")
     ) |>
-    group_by(tissue) |>
     summarise(n_expr = n(),
               n_egene = sum(!is.na(qval)),
               frac_egene = mean(!is.na(qval)),
-              .groups = "drop")
+              .by = tissue)

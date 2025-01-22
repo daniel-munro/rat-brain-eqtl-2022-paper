@@ -14,11 +14,9 @@ eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "ccciiciiccdddddid")
 # are probably further away and there are many more of them in GTEx.
 
 gtex_top <- tibble(
-    file = list.files("data/gtex/GTEx_Analysis_v8_eQTL",
-    full.names = TRUE
-)) |>
-    group_by(file) |>
-    summarise(
+    file = list.files("data/gtex/GTEx_Analysis_v8_eQTL", full.names = TRUE)
+) |>
+    reframe(
         read_tsv(
             file,
             col_types = cols(
@@ -26,7 +24,7 @@ gtex_top <- tibble(
                 log2_aFC = "d", tss_distance = "i", .default = "-"
             )
         ),
-        .groups = "drop"
+        .by = file
     ) |>
     filter(qval <= 0.05) |> # GTEx site says to do <=
     mutate(
@@ -52,7 +50,7 @@ tss |>
     mutate(group = fct_rev(group),
            abs_tss_distance = abs_tss_distance / 1e6) |>
     ggplot(aes(x = abs_tss_distance, color = group)) +
-    geom_density(adjust = 0.5, size = 0.8, outline.type = "full", show.legend = FALSE) +
+    geom_density(adjust = 0.5, linewidth = 0.8, outline.type = "full", show.legend = FALSE) +
     scale_x_continuous(expand = c(0.02, 0)) +
     scale_y_continuous(expand = c(0.02, 0)) +
     scale_color_manual(values = c("#F8766DFF", "#619CFFFF")) +

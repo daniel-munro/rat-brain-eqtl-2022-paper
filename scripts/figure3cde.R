@@ -30,8 +30,7 @@ p1 <- eqtls |>
 
 read_tsv("data/eqtls/eqtls_indep.txt", col_types = "ccciiciiccdddddid") |>
     summarise(fc_2 = mean(abs(log2_aFC) <= 1),
-              fc_4 = mean(abs(log2_aFC) <= 2),
-              .groups = "drop")
+              fc_4 = mean(abs(log2_aFC) <= 2))
 
 ######################
 ## allele frequency ##
@@ -45,9 +44,14 @@ all_snps <- info(readVcf("data/genotype/P50.rnaseq.88.unpruned.vcf.gz")) |>
 nbins <- 18
 p2 <- eqtls |>
     ggplot(aes(x = maf)) +
-    geom_histogram(aes(y = ..density..), binwidth = 0.5 / nbins, boundary = 0.5) +
-    stat_bin(aes(y = ..density..), data = all_snps, geom = "step", binwidth = 0.5 / nbins,
-             boundary = 0.5, color = "red", position = position_nudge(x = -0.5 * (0.5 / nbins))) +
+    geom_histogram(aes(y = after_stat(density)), binwidth = 0.5 / nbins, boundary = 0.5) +
+    stat_bin(aes(y = after_stat(density)),
+             data = all_snps,
+             geom = "step",
+             binwidth = 0.5 / nbins,
+             boundary = 0.5,
+             color = "red",
+             position = position_nudge(x = -0.5 * (0.5 / nbins))) +
     scale_x_continuous(expand = c(0, 0), limits = c(-0.001, 0.501)) +
     scale_y_continuous(expand = c(0, 0), limits = c(0, 3.7)) +
     xlab("Minor allele frequency") +
@@ -63,7 +67,7 @@ p2 <- eqtls |>
 
 p3 <- eqtls |>
     ggplot(aes(x = tss_distance)) +
-    geom_histogram(aes(y = ..density..), bins = 50) +
+    geom_histogram(aes(y = after_stat(density)), bins = 50) +
     scale_x_continuous(expand = c(0, 0), limits = c(-1.001, 1.001)) +
     scale_y_continuous(expand = c(0, 0), limits = c(0, 1.7)) +
     xlab("Distance from TSS (Mb)") +

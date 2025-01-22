@@ -35,7 +35,8 @@ d |>
     theme_bw() +
     theme(
         panel.grid = element_blank(),
-        legend.position = c(0.7, 0.7),
+        legend.position = "inside",
+        legend.position.inside = c(0.7, 0.7),
     ) +
     xlab("Centered relatedness") +
     ylab("Rat pairs within cohort")

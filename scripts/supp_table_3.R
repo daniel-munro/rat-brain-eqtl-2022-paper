@@ -11,10 +11,9 @@ eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "ccciiciiccdddddid")
 top_assoc <- read_tsv("data/eqtls/top_assoc.txt", col_types = "ccciiciiccdddddddd")
 
 spec_eqtl <- top_assoc |>
-    group_by(gene_id) |>
     mutate(n_sig = sum(qval < 0.05),
-           n_tested = n()) |>
-    ungroup() |>
+           n_tested = n(),
+           .by = gene_id) |>
     filter(n_sig == 1,
            # Assume untested gene/tissue combos would be even less significant:
            n_tested >= 2) |>

@@ -3,24 +3,22 @@ suppressPackageStartupMessages(library(tidyverse))
 ase <- read_tsv("data/eqtls/ASE_aFC.txt", col_types = "cccd")
 
 eqtls <- read_tsv("data/eqtls/eqtls_indep.txt", col_types = "ccciiciiccdddddid") |>
-    left_join(ase, by = c("tissue", "gene_id", "variant_id"))
-
+    left_join(ase, by = c("tissue", "gene_id", "variant_id"),
+              relationship = "one-to-one")
 
 counts <- eqtls |>
-    group_by(tissue) |>
     summarise(n_eQTLs = n(),
               n_eQTLs_with_ASE = sum(!is.na(log2_aFC_ASE)),
-              .groups = "drop")
+              .by = tissue)
 corrs <- eqtls |>
     filter(!is.na(log2_aFC_ASE) & !is.na(log2_aFC)) |>
-    group_by(tissue) |>
     summarise(
         R = cor(log2_aFC_ASE, log2_aFC),
         rho = cor(log2_aFC_ASE, log2_aFC, method = "spearman"),
         beta = deming::deming(log2_aFC ~ log2_aFC_ASE)$coefficients[2],
-        .groups = "drop"
+        .by = tissue
     ) |>
-    left_join(counts, by = "tissue") |>
+    left_join(counts, by = "tissue", relationship = "one-to-one") |>
     mutate(
         stats = str_c("r=", format(R, digits = 2),
                       " rho=", format(rho, digits = 2),

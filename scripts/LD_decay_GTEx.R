@@ -18,7 +18,7 @@ r2 <- function(m1, m2) {
 }
 
 MAX_DIST <- 1e7
-filename <- "GTEx_MAF20.vcf.gz"
+filename <- "data/gtex/GTEx_MAF20.vcf.gz"
 
 geno <- str_c("chr", c(1:22, "X")) |>
     lapply(load_geno_chr, filename)
@@ -28,22 +28,28 @@ mac <- tibble(SNP = rownames(geno),
               AC = rowSums(geno)) |>
     mutate(AC = pmin(AC, (ncol(geno) * 2) - AC)) |>
     filter(AC / (ncol(geno) * 2) > 0.2) |>
-    separate(SNP, c("chrom", "pos", "ref", "alt", "b"), sep = "_", convert = TRUE,
-             remove = FALSE)
+    separate_wider_delim(SNP, "_", names = c("chrom", "pos", "ref", "alt", "b"),
+                         cols_remove = FALSE) |>
+    mutate(pos = as.integer(pos))
 
 ld_pairs <- mac |>
-    group_by(chrom, AC) |>
-    summarise({
+    reframe({
         print(str_glue("{unique(chrom)}, AC {unique(AC)}"))
         crossing(SNP.x = SNP, SNP.y = SNP) |>
             slice_sample(prop = 0.02) |>
-            separate(SNP.x, c("chrom.x", "pos.x", "ref.x", "alt.x", "b.x"), sep = "_", convert = TRUE,
-                     remove = FALSE) |>
-            separate(SNP.y, c("chrom.y", "pos.y", "ref.y", "alt.y", "b.y"), sep = "_", convert = TRUE,
-                     remove = FALSE) |>
+            separate_wider_delim(
+                SNP.x, "_", names = c("chrom.x", "pos.x", "ref.x", "alt.x", "b.x"),
+                cols_remove = FALSE
+            ) |>
+            separate_wider_delim(
+                SNP.y, "_", names = c("chrom.y", "pos.y", "ref.y", "alt.y", "b.y"),
+                cols_remove = FALSE
+            ) |>
+            mutate(pos.x = as.integer(pos.x),
+                   pos.y = as.integer(pos.y)) |>
             filter(pos.x < pos.y,
                    pos.y - pos.x <= MAX_DIST)
-    }, .groups = "drop") |>
+    }, .by = c(chrom, AC)) |>
     slice_sample(n = 1e6)
 
 ld <- ld_pairs |>

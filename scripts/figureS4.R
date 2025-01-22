@@ -17,10 +17,9 @@ gtex <- read_tsv("data/anevah/gtex_phaser_vg.tsv.gz",
            !is.na(Vg))
 
 rat <- tibble(tissue = c("IL", "LHb", "NAcc", "OFC", "PL")) |>
-    group_by(tissue) |>
-    summarise(
+    reframe(
         read_tsv(str_glue("data/anevah/output/Vg.{tissue}.tsv.gz"), col_types = "cd"),
-        .groups = "drop"
+        .by = tissue
     ) |>
     rename(gene_id = GENE_ID)
 
@@ -51,7 +50,6 @@ cor_intra <- bind_rows(
     crossing(tissue.x = unique(gtex$tissue),
              tissue.y = unique(gtex$tissue))
 ) |>
-    group_by(tissue.x, tissue.y) |>
     summarise(
         inner_join(
             filter(vg, tissue == tissue.x),
@@ -60,12 +58,11 @@ cor_intra <- bind_rows(
         ) |>
             summarise(r = cor(Vg.x, Vg.y),
                       n = n()),
-        .groups = "drop"
+        .by = c(tissue.x, tissue.y)
     )
 
 cor_inter <- crossing(tissue.x = unique(rat$tissue),
                       tissue.y = unique(gtex$tissue)) |>
-    group_by(tissue.x, tissue.y) |>
     summarise(
         gene_map |>
             inner_join(
@@ -78,7 +75,7 @@ cor_inter <- crossing(tissue.x = unique(rat$tissue),
             ) |>
             summarise(r = cor(Vg.x, Vg.y),
                       n = n()),
-        .groups = "drop"
+        .by = c(tissue.x, tissue.y)
     )
 
 cor_inter <- bind_rows(
